@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: conversa-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-conversa_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Jos@56567}
+      POSTGRES_DB: ${DB_NAME:-conversa_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: conversa-backend
+    restart: always
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-conversa_admin}:${DB_PASSWORD_URL_ENCODED:-Jos%4056567}@postgres:5432/${DB_NAME:-conversa_db}?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      FRONTEND_URL: http://localhost:3000
+    depends_on:
+      - postgres
+
+  client_frontend:
+    build:
+      context: ./client_frontend
+      dockerfile: Dockerfile
+    container_name: conversa-client
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+    depends_on:
+      - backend
+
+  admin_dashboard:
+    build:
+      context: ./admin_dashboard
+      dockerfile: Dockerfile
+    container_name: conversa-admin
+    restart: always
+    ports:
+      - "3002:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

@@ -1,0 +1,37 @@
+@import "tailwindcss";
+@reference "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --primary: #4f46e5;
+  --secondary: #f8fafc;
+  --accent: #8b5cf6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f8fafc;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Outfit', sans-serif;
+}
+
+@layer components {
+  .chat-bubble-user {
+    @apply bg-indigo-600 text-white rounded-2xl rounded-tr-none px-6 py-4 shadow-lg shadow-indigo-500/20 max-w-[80%];
+  }
+
+  .chat-bubble-ai {
+    @apply bg-slate-100 dark:bg-slate-800 rounded-2xl rounded-tl-none px-6 py-4 max-w-[80%];
+  }
+  
+  .glass-header {
+    @apply sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border-b border-slate-200 dark:border-slate-800;
+  }
+}

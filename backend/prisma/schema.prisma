@@ -1,0 +1,148 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Tenant {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  apiKeys       ApiKey[]
+  agents        Agent[]
+  conversations Conversation[]
+  calls         Call[]
+  usage         Usage[]
+  webhooks      Webhook[]
+  aiProviderKeys AiProviderKey[]
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  createdAt DateTime @default(now())
+  lastUsed  DateTime?
+}
+
+model Agent {
+  id           String         @id @default(cuid())
+  name         String
+  tone         String?        // formal, friendly, energetic
+  industry     String?        // banking, logistics, etc.
+  instructions String?        @db.Text
+  voiceId      String?        // ElevenLabs or other provider voice ID
+  tenantId     String
+  tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  conversations Conversation[]
+  calls         Call[]
+  knowledgeBases KnowledgeBase[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model KnowledgeBase {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  agentId     String
+  agent       Agent    @relation(fields: [agentId], references: [id])
+  tenantId    String
+  chunks      DocumentChunk[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DocumentChunk {
+  id              String   @id @default(cuid())
+  content         String   @db.Text
+  metadata        Json?    // source file, page number, etc.
+  embedding       Float[]  // Vector embedding (if using pgvector, otherwise store as array)
+  knowledgeBaseId String
+  knowledgeBase   KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id])
+  createdAt       DateTime @default(now())
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  sessionId String    @unique
+  messages  Json?     // Array of { role, content, timestamp }
+  agentId   String
+  agent     Agent     @relation(fields: [agentId], references: [id])
+  tenantId  String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Call {
+  id         String    @id @default(cuid())
+  sid        String    @unique // Twilio Call SID
+  from       String
+  to         String
+  duration   Int?      // In seconds
+  status     String    // completed, failed, etc.
+  transcript Json?     // Array of { role, content, timestamp }
+  summary    String?   @db.Text
+  outcome    String?   // resolved, escalated, abandoned, etc.
+  agentId    String
+  agent      Agent     @relation(fields: [agentId], references: [id])
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  createdAt  DateTime  @default(now())
+}
+
+model Usage {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  metric    String   // messages, voice_minutes, stt_seconds, tts_chars
+  quantity  Float
+  timestamp DateTime @default(now())
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  url       String
+  events    String[] // array of event types
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model AiProviderKey {
+  id              String   @id @default(cuid())
+  provider        String
+  label           String
+  encryptedApiKey String   @db.Text
+  keyPreview      String
+  modelName       String?
+  baseUrl         String?
+  isActive        Boolean  @default(false)
+  tenantId        String
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  lastUsed        DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([tenantId, provider])
+}
