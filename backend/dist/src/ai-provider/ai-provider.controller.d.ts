@@ -5,7 +5,7 @@ export declare class AiProviderController {
     constructor(aiProviderService: AiProviderService);
     list(req: Request): Promise<{
         limit: number;
-        supportedProviders: readonly ["openai", "gemini", "grok", "anthropic", "deepseek", "mistral", "openrouter"];
+        supportedProviders: readonly ["openai", "gemini", "grok", "anthropic", "deepseek", "mistral", "openrouter", "groq"];
         providers: {
             id: string;
             provider: string;

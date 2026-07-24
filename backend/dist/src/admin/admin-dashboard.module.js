@@ -10,11 +10,13 @@ exports.AdminDashboardModule = void 0;
 const common_1 = require("@nestjs/common");
 const admin_dashboard_controller_1 = require("./admin-dashboard.controller");
 const admin_dashboard_service_1 = require("./admin-dashboard.service");
+const global_ai_key_module_1 = require("./global-ai-key.module");
 let AdminDashboardModule = class AdminDashboardModule {
 };
 exports.AdminDashboardModule = AdminDashboardModule;
 exports.AdminDashboardModule = AdminDashboardModule = __decorate([
     (0, common_1.Module)({
+        imports: [global_ai_key_module_1.GlobalAiKeyModule],
         controllers: [admin_dashboard_controller_1.AdminDashboardController],
         providers: [admin_dashboard_service_1.AdminDashboardService],
     })

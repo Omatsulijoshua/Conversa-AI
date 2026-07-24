@@ -6,20 +6,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AiProviderModule = void 0;
+exports.GlobalAiKeyModule = void 0;
 const common_1 = require("@nestjs/common");
-const ai_provider_controller_1 = require("./ai-provider.controller");
-const ai_provider_service_1 = require("./ai-provider.service");
-const global_ai_key_module_1 = require("../admin/global-ai-key.module");
-let AiProviderModule = class AiProviderModule {
+const global_ai_key_service_1 = require("./global-ai-key.service");
+const global_ai_key_controller_1 = require("./global-ai-key.controller");
+let GlobalAiKeyModule = class GlobalAiKeyModule {
 };
-exports.AiProviderModule = AiProviderModule;
-exports.AiProviderModule = AiProviderModule = __decorate([
+exports.GlobalAiKeyModule = GlobalAiKeyModule;
+exports.GlobalAiKeyModule = GlobalAiKeyModule = __decorate([
     (0, common_1.Module)({
-        imports: [global_ai_key_module_1.GlobalAiKeyModule],
-        controllers: [ai_provider_controller_1.AiProviderController],
-        providers: [ai_provider_service_1.AiProviderService],
-        exports: [ai_provider_service_1.AiProviderService],
+        controllers: [global_ai_key_controller_1.GlobalAiKeyController],
+        providers: [global_ai_key_service_1.GlobalAiKeyService],
+        exports: [global_ai_key_service_1.GlobalAiKeyService],
     })
-], AiProviderModule);
-//# sourceMappingURL=ai-provider.module.js.map
+], GlobalAiKeyModule);
+//# sourceMappingURL=global-ai-key.module.js.map

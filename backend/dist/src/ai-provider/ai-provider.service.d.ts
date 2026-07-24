@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { GlobalAiKeyService } from '../admin/global-ai-key.service';
 type CreateProviderKeyInput = {
     provider: string;
     apiKey: string;
@@ -11,10 +12,11 @@ type CreateProviderKeyInput = {
 export declare class AiProviderService {
     private prisma;
     private config;
-    constructor(prisma: PrismaService, config: ConfigService);
+    private globalKeys;
+    constructor(prisma: PrismaService, config: ConfigService, globalKeys: GlobalAiKeyService);
     list(tenantId: string): Promise<{
         limit: number;
-        supportedProviders: readonly ["openai", "gemini", "grok", "anthropic", "deepseek", "mistral", "openrouter"];
+        supportedProviders: readonly ["openai", "gemini", "grok", "anthropic", "deepseek", "mistral", "openrouter", "groq"];
         providers: {
             id: string;
             provider: string;
@@ -56,6 +58,19 @@ export declare class AiProviderService {
         deleted: boolean;
     }>;
     getActiveKey(tenantId: string): Promise<{
+        apiKey: string;
+        id: any;
+        provider: any;
+        label: any;
+        keyPreview: any;
+        modelName: any;
+        baseUrl: any;
+        weight: any;
+        isActive: any;
+        lastUsed: any;
+        createdAt: any;
+        updatedAt: any;
+    } | {
         apiKey: string;
         id: string;
         provider: string;

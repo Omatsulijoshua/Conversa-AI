@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { ConfigService } from '@nestjs/config';
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { GlobalAiKeyService } from '../admin/global-ai-key.service';
 import {
   DEFAULT_CHAT_MODELS,
   OPENAI_COMPATIBLE_BASE_URLS,
@@ -23,6 +24,7 @@ export class AiProviderService {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
+    private globalKeys: GlobalAiKeyService,
   ) {}
 
   async list(tenantId: string) {
@@ -123,6 +125,11 @@ export class AiProviderService {
         ...this.publicProvider(row),
         apiKey: this.decrypt(row.encryptedApiKey),
       };
+    }
+
+    const globalKey = await this.globalKeys.selectRoutedKey();
+    if (globalKey) {
+      return globalKey;
     }
 
     const envKey = this.config.get<string>('OPENAI_API_KEY');

@@ -14,13 +14,16 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const crypto_1 = require("crypto");
 const prisma_service_1 = require("../prisma/prisma.service");
+const global_ai_key_service_1 = require("../admin/global-ai-key.service");
 const ai_provider_constants_1 = require("./ai-provider.constants");
 let AiProviderService = class AiProviderService {
     prisma;
     config;
-    constructor(prisma, config) {
+    globalKeys;
+    constructor(prisma, config, globalKeys) {
         this.prisma = prisma;
         this.config = config;
+        this.globalKeys = globalKeys;
     }
     async list(tenantId) {
         const rows = await this.prisma.aiProviderKey.findMany({
@@ -28,7 +31,7 @@ let AiProviderService = class AiProviderService {
             orderBy: [{ isActive: 'desc' }, { createdAt: 'asc' }],
         });
         return {
-            limit: 7,
+            limit: 8,
             supportedProviders: ai_provider_constants_1.SUPPORTED_AI_PROVIDERS,
             providers: rows.map(row => this.publicProvider(row)),
         };
@@ -42,8 +45,8 @@ let AiProviderService = class AiProviderService {
         const existing = await this.prisma.aiProviderKey.findUnique({
             where: { tenantId_provider: { tenantId, provider } },
         });
-        if (!existing && existingCount >= 7) {
-            throw new common_1.BadRequestException('You can store up to 7 AI provider keys');
+        if (!existing && existingCount >= 8) {
+            throw new common_1.BadRequestException('You can store up to 8 AI provider keys');
         }
         if (input.makeActive ?? existingCount === 0) {
             await this.prisma.aiProviderKey.updateMany({
@@ -107,6 +110,10 @@ let AiProviderService = class AiProviderService {
                 ...this.publicProvider(row),
                 apiKey: this.decrypt(row.encryptedApiKey),
             };
+        }
+        const globalKey = await this.globalKeys.selectRoutedKey();
+        if (globalKey) {
+            return globalKey;
         }
         const envKey = this.config.get('OPENAI_API_KEY');
         if (!envKey)
@@ -188,6 +195,7 @@ exports.AiProviderService = AiProviderService;
 exports.AiProviderService = AiProviderService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        global_ai_key_service_1.GlobalAiKeyService])
 ], AiProviderService);
 //# sourceMappingURL=ai-provider.service.js.map

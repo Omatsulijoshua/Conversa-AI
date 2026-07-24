@@ -146,3 +146,24 @@ model AiProviderKey {
 
   @@unique([tenantId, provider])
 }
+
+model GlobalAiKey {
+  id              String    @id @default(cuid())
+  provider        String    // openai, gemini, groq, etc.
+  label           String
+  encryptedApiKey String    @db.Text
+  keyPreview      String
+  modelName       String?
+  baseUrl         String?
+  weight          Int       @default(1)
+  isActive        Boolean   @default(true)
+  lastUsed        DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model GlobalRoutingConfig {
+  id        String   @id @default("global_routing_config")
+  strategy  String   @default("weighted") // weighted, round-robin, failover
+  updatedAt DateTime @updatedAt
+}
