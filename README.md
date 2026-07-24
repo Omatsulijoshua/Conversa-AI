@@ -1,5 +1,7 @@
 # 🎙️ Conversa AI
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Omatsulijoshua/Conversa-AI)
+
 Conversa AI is an **API-first, multi-tenant Voice & Chat AI customer service platform**. It enables businesses to deploy intelligent, human-like voice and chat agents that can handle multiple simultaneous customer calls and chats, helping automate and scale customer support operations.
 
 Featuring a **Bring Your Own Key (BYOK)** architecture, a **Neural Voice Lab** for custom voice cloning, and a seamless **Retrieval-Augmented Generation (RAG)** knowledge base ingestion pipeline, Conversa AI bridges the gap between static chatbots and natural voice conversations.
