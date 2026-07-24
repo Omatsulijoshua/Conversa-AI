@@ -2,6 +2,7 @@ services:
   # Backend Web Service (NestJS)
   - type: web
     name: conversa-backend
+    plan: free
     runtime: node
     rootDir: backend
     buildCommand: npm install && npx prisma generate && npm run build
@@ -29,6 +30,7 @@ services:
   # Client Frontend Web Service (Next.js)
   - type: web
     name: conversa-client
+    plan: free
     runtime: node
     rootDir: client_frontend
     buildCommand: npm install && npm run build
@@ -40,6 +42,7 @@ services:
   # Admin Dashboard Web Service (Next.js)
   - type: web
     name: conversa-admin
+    plan: free
     runtime: node
     rootDir: admin_dashboard
     buildCommand: npm install && npm run build
