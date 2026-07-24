@@ -36,7 +36,7 @@ src/
 
 To ensure data confidentiality, Conversa AI uses a **Bring Your Own Key (BYOK)** setup for LLM access. 
 
-When a tenant saves an API key for OpenAI, Gemini, Grok, Anthropic, DeepSeek, Mistral, or OpenRouter:
+When a tenant saves an API key for OpenAI, Gemini, Grok, Anthropic, DeepSeek, Mistral, OpenRouter, or Groq:
 1. The backend generates a random **12-byte Initialization Vector (IV)**.
 2. The key is encrypted using **AES-256-GCM** using a key derived from a SHA-256 hash of the `AI_KEY_ENCRYPTION_SECRET` (or falling back to `JWT_SECRET`).
 3. The encrypted payload, Auth Tag, and base64 IV are stored in the database in the format: `ivBase64.tagBase64.encryptedBase64`.

@@ -160,10 +160,10 @@ export default function SettingsPage() {
                 <div className="flex justify-between items-start gap-6 mb-8">
                   <div>
                     <h3 className="text-xl font-bold text-white">AI Provider Keys</h3>
-                    <p className="text-sm text-slate-500 mt-1">Store up to 7 provider keys and choose which one powers agent responses.</p>
+                    <p className="text-sm text-slate-500 mt-1">Store up to 8 provider keys and choose which one powers agent responses.</p>
                   </div>
                   <div className="px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-300 text-xs font-bold border border-indigo-500/20">
-                    {aiProviders.length}/7 Added
+                    {aiProviders.length}/8 Added
                   </div>
                 </div>
 
@@ -179,7 +179,7 @@ export default function SettingsPage() {
                     onChange={(e) => setProviderForm({ ...providerForm, provider: e.target.value })}
                     className="lg:col-span-1 bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-indigo-500 outline-none"
                   >
-                    {(supportedProviders.length ? supportedProviders : ['openai', 'gemini', 'grok', 'anthropic', 'deepseek', 'mistral', 'openrouter']).map(provider => (
+                    {(supportedProviders.length ? supportedProviders : ['openai', 'gemini', 'grok', 'anthropic', 'deepseek', 'mistral', 'openrouter', 'groq']).map(provider => (
                       <option key={provider} value={provider}>{provider}</option>
                     ))}
                   </select>
@@ -207,7 +207,7 @@ export default function SettingsPage() {
                   />
                   <button
                     type="submit"
-                    disabled={providerSaving || aiProviders.length >= 7 && !aiProviders.some(provider => provider.provider === providerForm.provider)}
+                    disabled={providerSaving || aiProviders.length >= 8 && !aiProviders.some(provider => provider.provider === providerForm.provider)}
                     className="lg:col-span-1 flex items-center justify-center gap-2 px-5 py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 disabled:opacity-60"
                   >
                     {providerSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}

@@ -32,7 +32,7 @@ export class AiProviderService {
     });
 
     return {
-      limit: 7,
+      limit: 8,
       supportedProviders: SUPPORTED_AI_PROVIDERS,
       providers: rows.map(row => this.publicProvider(row)),
     };
@@ -49,8 +49,8 @@ export class AiProviderService {
       where: { tenantId_provider: { tenantId, provider } },
     });
 
-    if (!existing && existingCount >= 7) {
-      throw new BadRequestException('You can store up to 7 AI provider keys');
+    if (!existing && existingCount >= 8) {
+      throw new BadRequestException('You can store up to 8 AI provider keys');
     }
 
     if (input.makeActive ?? existingCount === 0) {

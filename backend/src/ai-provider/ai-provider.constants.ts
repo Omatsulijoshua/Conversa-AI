@@ -6,6 +6,7 @@ export const SUPPORTED_AI_PROVIDERS = [
   'deepseek',
   'mistral',
   'openrouter',
+  'groq',
 ] as const;
 
 export type SupportedAiProvider = (typeof SUPPORTED_AI_PROVIDERS)[number];
@@ -18,6 +19,7 @@ export const DEFAULT_CHAT_MODELS: Record<SupportedAiProvider, string> = {
   deepseek: 'deepseek-chat',
   mistral: 'mistral-small-latest',
   openrouter: 'openai/gpt-4o-mini',
+  groq: 'llama-3.3-70b-versatile',
 };
 
 export const OPENAI_COMPATIBLE_BASE_URLS: Partial<Record<SupportedAiProvider, string>> = {
@@ -26,5 +28,6 @@ export const OPENAI_COMPATIBLE_BASE_URLS: Partial<Record<SupportedAiProvider, st
   deepseek: 'https://api.deepseek.com/v1',
   mistral: 'https://api.mistral.ai/v1',
   openrouter: 'https://openrouter.ai/api/v1',
+  groq: 'https://api.groq.com/openai/v1',
 };
 

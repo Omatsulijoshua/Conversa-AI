@@ -71,7 +71,7 @@ graph TD
 *   **Neural Voice Lab**: Clones voices in real-time. Record a sample directly from the browser microphone or upload a `.webm`/`.wav` file to synthesize cloned custom voices via ElevenLabs.
 *   **Playground Simulator**: Real-time interactive testing interface to simulate chat flows and bootstrap test agents instantly with a single click.
 *   **System Webhooks**: Register callback URLs to receive real-time payload updates on platform actions (e.g. Call Completed).
-*   **BYOK Key Vault**: Connect custom keys for OpenAI, Gemini, Grok, Anthropic, DeepSeek, Mistral, and OpenRouter, encrypted with enterprise-grade **AES-256-GCM**.
+*   **BYOK Key Vault**: Connect custom keys for OpenAI, Gemini, Grok, Anthropic, DeepSeek, Mistral, OpenRouter, and Groq, encrypted with enterprise-grade **AES-256-GCM**.
 
 ### 👑 Operator (Admin) Dashboard
 *   **Platform Overview**: View global system usage, average latency, total call count, and message volume.
