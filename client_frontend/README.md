@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 💻 Conversa AI - Developer Portal Frontend
 
-## Getting Started
+This is the multi-tenant client-facing web application where businesses sign up, configure voice/chat agents, train them with custom documentation, manage BYOK encryption keys, test profiles in a live sandbox, and generate API keys.
 
-First, run the development server:
+Built with **Next.js 14** (App Router), **Tailwind CSS**, **Lucide Icons**, and **Recharts**.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## 📁 Folder Structure & Main Views
+
+All key routes and layouts are located in the `src/app/` directory:
+
+```text
+src/
+├── components/
+│   └── Sidebar.tsx              # Left navigation bar with adaptive states
+├── lib/
+│   └── api.ts                   # Token-authenticated fetch helper wrapper (apiRequest)
+└── app/
+    ├── layout.tsx               # Root layout setting typography (Inter) and global CSS
+    ├── globals.css              # Custom scrollbars, glassmorphism card styling, animations
+    ├── page.tsx                 # SaaS Landing Page with hero section and feature grids
+    ├── (auth)/                  # Shared login/signup auth templates
+    │   ├── login/               # Tenant user password credentials login
+    │   └── signup/              # New business registrations
+    ├── (dashboard)/             # Authenticated workspace layout
+    │   ├── dashboard/           # Developer main charts, API volume stats, and quick links
+    │   ├── agents/              # Agent builder, RAG uploader, and Business Rules Modals
+    │   ├── voice-lab/           # Voice Cloning Studio (record mic or upload audio samples)
+    │   ├── api-keys/            # Platform Access Token generation & revoke dashboard
+    │   ├── playground/          # Live agent interactive simulator & demo bootstrap
+    │   ├── analytics/           # Deep usage analytics over past days
+    │   └── settings/            # API Key Manager (BYOK) & Billing preferences
+    ├── auth/callback/           # Social authentication (Google OAuth) redirects handler
+    └── chat/                    # Fullscreen client chat simulator frame
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🎨 Design System & Visual Highlights
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Conversa AI utilizes a premium, dark-themed visual design tailored for developers:
+*   **Typography**: Outfitted with professional font styling (Inter/Vercel Geist style).
+*   **Glassmorphism**: Visual cards and panels leverage semi-transparent background blurs (`backdrop-blur-md`), dark border accents (`border-white/10`), and deep background colors (`bg-slate-950/50`).
+*   **Micro-animations**: Subtle transitions on button hovering, form focused states, and modal load fade-ins to guarantee high-fidelity interactions.
+*   **Data Visualizations**: Responsive Area and Bar charts utilizing **Recharts** to display daily message requests, latency variations, and system performance.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## ⚙️ Key Component Behaviors
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1. `apiRequest` Helper (`src/lib/api.ts`)
+A central API communication utility that:
+*   Automatically reads the tenant token `conversa_token` from `localStorage`.
+*   Appends authorization headers (`Authorization: Bearer <token>`).
+*   Resolves relative paths to the server endpoint (`NEXT_PUBLIC_API_URL`).
+*   Handles logout redirections when authentication errors occur.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. Business Rules Modal (`src/app/(dashboard)/agents/page.tsx`)
+Allows businesses to design the agent prompt in two ways:
+*   **Basic Mode**: Form inputs (Tone, goals, business hours, refund policy, handoff rules, forbidden phrases) which automatically compile into a formatted markdown prompt structure.
+*   **Developer Mode**: A direct markdown editor for editing full raw prompts and developer settings.
 
-## Deploy on Vercel
+### 3. Voice Lab Recording (`src/app/(dashboard)/voice-lab/page.tsx`)
+Uses the browser's standard **MediaRecorder API** to capture voice samples directly from the microphone:
+*   Encodes recorded chunks into a `.webm` audio stream.
+*   Dispatches it as `multipart/form-data` to the NestJS API cloning route.
+*   Visualizes real-time recording timer states.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ⚡ Running Locally
+
+### Prerequisites
+*   Node.js v18 or newer
+*   Running backend instance at `http://localhost:3001`
+
+### Steps
+1.  Navigate to the directory:
+    ```bash
+    cd client_frontend
+    ```
+2.  Install packages:
+    ```bash
+    npm install
+    ```
+3.  Configure variables:
+    Create a `.env.local` file (or let it fallback to default):
+    ```env
+    NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+    ```
+4.  Start Next.js in development mode:
+    ```bash
+    npm run dev
+    ```
+    The application will run at **`http://localhost:3000`**.
