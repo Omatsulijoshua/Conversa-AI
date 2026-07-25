@@ -299,6 +299,114 @@ The easiest way to get Conversa AI running locally is using **Docker Compose**, 
 
 ---
 
+## 🔌 Developer Integration Guide
+
+Conversa AI is designed as a developer-first platform. Below is the technical guide for connecting web applications, phone carrier lines, self-hosted PBX setups, and external voice apps.
+
+### 1. 🌐 Direct API & WebRTC (Free Internet Calls & Chat)
+Developers can build custom user interfaces (iOS, Android, React Web) and call or chat directly over the internet without incurring telecom carrier fees.
+
+#### Start a session
+```bash
+curl -X POST https://conversa-backend-6bou.onrender.com/api/v1/conversation/start \
+  -H "x-api-key: YOUR_DEVELOPER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "agentId": "YOUR_AGENT_UUID" }'
+```
+**Response (`201 Created`):**
+```json
+{
+  "sessionId": "4a7b2938-12ab-34cd-56ef-7890abcdef12",
+  "agentId": "YOUR_AGENT_UUID",
+  "messages": []
+}
+```
+
+#### Send a message
+```bash
+curl -X POST https://conversa-backend-6bou.onrender.com/api/v1/conversation/message \
+  -H "x-api-key: YOUR_DEVELOPER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": "4a7b2938-12ab-34cd-56ef-7890abcdef12",
+    "text": "Do you offer refunds?"
+  }'
+```
+**Response (`201 Created`):**
+```json
+{
+  "response": "Yes, we offer refunds within 30 days of purchase under our standard refund policy.",
+  "sources": [
+    { "title": "Refund Policy.pdf", "snippet": "Customers may request a refund within 30 days..." }
+  ]
+}
+```
+
+---
+
+### 2. 📞 Twilio Voice, SMS, and WhatsApp Setup
+Integrate Conversa AI directly with your Twilio account to handle incoming phone calls, SMS, or WhatsApp threads.
+
+*   **Voice (Inbound Calls)**: Under active phone number settings, configure the voice handler to webhook **HTTP POST**:
+    ```text
+    https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound
+    ```
+*   **SMS & WhatsApp Chat**: Under phone number messaging settings (or WhatsApp sandbox configuration), configure the messaging webhook **HTTP POST**:
+    ```text
+    https://conversa-backend-6bou.onrender.com/api/v1/webhooks/twilio/messaging
+    ```
+
+---
+
+### 3. 🟢 Telnyx TeXML Setup (Free Developer Testing)
+To test with real phone numbers for free, register a free Telnyx account (which includes $10 in trial credits) and purchase a local/national test number.
+
+1.  Navigate to **Voice & Fax > Programmable Voice** in the Telnyx Portal.
+2.  Create a **TeXML Application** and point the **Webhook URL** (HTTP POST) to:
+    ```text
+    https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound
+    ```
+3.  Assign your purchased number to the TeXML Application under the **My Numbers** portal. Telnyx will route physical calls directly to Conversa for free using your trial credits.
+
+---
+
+### 4. 🎛️ Self-Hosted SIP PBX Gateways (Asterisk / Verizon / GSM Hardware)
+For telecom providers (like Verizon, MTN) or setups utilizing **physical GSM hardware gateways** (to route calls from local SIM cards over the internet), you can route standard SIP connections to Conversa.
+
+#### Asterisk Gateway Configuration (`sip.conf`)
+Configure your trunk to connect your telephone carrier or physical GSM gateway:
+```ini
+[carrier-trunk]
+type=peer
+host=your_carrier_or_gsm_gateway_ip
+context=incoming-sip-carrier
+disallow=all
+allow=ulaw
+allow=alaw
+```
+
+#### Asterisk Dialplan Configuration (`extensions.conf`)
+Route calls received on the carrier lines to Conversa's voice gateway over HTTP:
+```ini
+[incoming-sip-carrier]
+exten => _+X.,1,NoOp(Relaying call to Conversa AI Gateway)
+ same => n,Answer()
+ same => n,Playback(connecting-conversa-voice)
+ ; Forward audio stream using an AGI script or local wrapper to Conversa
+ same => n,AGI(agi://conversa-backend-6bou.onrender.com/voice-gateway)
+ same => n,Hangup()
+```
+
+---
+
+### 🎮 5. Social / Meeting Apps (Discord, Zoom, Google Meet)
+You can connect Conversa AI to active digital meeting rooms and audio channels:
+
+*   **Discord Voice Channels**: Build a Discord bot application in Node.js or Python. Set the bot to join the voice channel, listen to user speaking packets, pipe the raw PCM audio buffers to the `/api/v1/conversation/message` or streaming voice gateway, and stream the generated TTS response bytes back to the channel.
+*   **Zoom & Google Meet**: Use **SIP Audio Join** connectors. Set up a virtual participant bot in Zoom that dials into your self-hosted Asterisk server. Asterisk then bridges the participant's voice stream to Conversa's audio engine.
+
+---
+
 ## 🔒 Security & BYOK Architecture
 
 Conversa AI utilizes a Bring Your Own Key model to control API costs. Tenants input their custom LLM API keys which are encrypted before writing to PostgreSQL:
