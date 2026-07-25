@@ -140,12 +140,12 @@ export default function DocsPage() {
             <div className="w-10 h-10 bg-emerald-650 rounded-xl flex items-center justify-center font-bold">1</div>
             <h3 className="text-white font-bold text-lg">📞 Live Voice Answering</h3>
             <p className="text-slate-400 text-sm leading-relaxed">
-              To answer real customer voice calls, navigate to your phone number settings in the Twilio Console. Under <strong>Voice & Fax</strong>, set the "A CALL COMES IN" webhook to:
+              To answer voice calls, connect your carrier number (Twilio Voice or Telnyx TeXML application). Point the inbound call webhook URL to:
             </p>
             <code className="block bg-black/60 p-3 rounded-lg text-xs text-indigo-300 font-mono break-all select-all">
               https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound
             </code>
-            <p className="text-[10px] text-slate-505">Ensure the method dropdown is set to <strong>HTTP POST</strong>.</p>
+            <p className="text-[10px] text-slate-505">Ensure the method is set to <strong>HTTP POST</strong>.</p>
           </div>
 
           <div className="p-6 bg-black/30 border border-white/10 rounded-2xl space-y-4">
