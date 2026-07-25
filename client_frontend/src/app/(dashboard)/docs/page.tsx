@@ -130,33 +130,52 @@ export default function DocsPage() {
             <PhoneCall className="w-6 h-6 text-emerald-300" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-white">Connect a Phone Number</h2>
-            <p className="text-sm text-slate-500">This is how Conversa takes control of calls.</p>
+            <h2 className="text-2xl font-bold text-white">Connect Twilio Phone Calls, SMS & WhatsApp</h2>
+            <p className="text-sm text-slate-500">Configure your active Twilio numbers to route calls and chats to your AI agents.</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          {phoneSteps.map((step, index) => (
-            <div key={step} className="relative p-5 rounded-2xl border border-white/10 bg-black/30">
-              <div className="flex items-center justify-between mb-4">
-                <span className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold">{index + 1}</span>
-                {index < phoneSteps.length - 1 ? <Route className="w-5 h-5 text-slate-600" /> : <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
-              </div>
-              <p className="text-sm text-slate-300 leading-relaxed">{step}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 bg-black/30 border border-white/10 rounded-2xl space-y-4">
+            <div className="w-10 h-10 bg-emerald-650 rounded-xl flex items-center justify-center font-bold">1</div>
+            <h3 className="text-white font-bold text-lg">📞 Live Voice Answering</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              To answer real customer voice calls, navigate to your phone number settings in the Twilio Console. Under <strong>Voice & Fax</strong>, set the "A CALL COMES IN" webhook to:
+            </p>
+            <code className="block bg-black/60 p-3 rounded-lg text-xs text-indigo-300 font-mono break-all select-all">
+              https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound
+            </code>
+            <p className="text-[10px] text-slate-505">Ensure the method dropdown is set to <strong>HTTP POST</strong>.</p>
+          </div>
+
+          <div className="p-6 bg-black/30 border border-white/10 rounded-2xl space-y-4">
+            <div className="w-10 h-10 bg-indigo-650 rounded-xl flex items-center justify-center font-bold">2</div>
+            <h3 className="text-white font-bold text-lg">💬 SMS Chatbot</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              To handle incoming customer SMS text messages, navigate to your phone number settings in the Twilio Console. Under <strong>Messaging</strong>, set the "A MESSAGE COMES IN" webhook to:
+            </p>
+            <code className="block bg-black/60 p-3 rounded-lg text-xs text-indigo-300 font-mono break-all select-all">
+              https://conversa-backend-6bou.onrender.com/api/v1/webhooks/twilio/messaging
+            </code>
+            <p className="text-[10px] text-slate-505">Ensure the method dropdown is set to <strong>HTTP POST</strong>.</p>
+          </div>
+
+          <div className="p-6 bg-black/30 border border-white/10 rounded-2xl space-y-4">
+            <div className="w-10 h-10 bg-purple-650 rounded-xl flex items-center justify-center font-bold">3</div>
+            <h3 className="text-white font-bold text-lg">🟢 WhatsApp Chatbot</h3>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              To route WhatsApp chats to your agents, go to <strong>Messaging &gt; Try it out &gt; WhatsApp Sandbox</strong> (or your approved WhatsApp sender). Set the message webhook to:
+            </p>
+            <code className="block bg-black/60 p-3 rounded-lg text-xs text-indigo-300 font-mono break-all select-all">
+              https://conversa-backend-6bou.onrender.com/api/v1/webhooks/twilio/messaging
+            </code>
+            <p className="text-[10px] text-slate-505">Ensure the method dropdown is set to <strong>HTTP POST</strong>.</p>
+          </div>
         </div>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <InfoCard icon={RadioTower} title="Webhook" text="Your phone provider sends incoming call events to Conversa." />
-          <InfoCard icon={Settings2} title="Agent Routing" text="Conversa maps each number to the agent that should answer." />
-          <InfoCard icon={PhoneCall} title="Forward or Port" text="Forward your existing line or port it into the provider later." />
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-amber-400/20 bg-amber-400/10 p-5">
-          <p className="text-sm text-amber-100 leading-relaxed">
-            Live phone answering requires a telephony webhook module on the backend. The project already has Twilio dependencies and environment keys,
-            but the production incoming-call webhook still needs to be connected before a real number can be handed to customers.
+        <div className="mt-8 p-5 rounded-2xl border border-indigo-500/20 bg-indigo-500/10">
+          <p className="text-sm text-indigo-100 leading-relaxed font-medium">
+            💡 <strong>Pro-Tip for Developers:</strong> You can bind custom agents to specific numbers by appending <code>?agentId=YOUR_AGENT_ID</code> to the webhook URL parameters. This allows different phone lines or WhatsApp contacts to connect to different AI agents on the fly!
           </p>
         </div>
       </div>
