@@ -155,123 +155,41 @@ export default function SettingsPage() {
           )}
 
           {activeTab === 'ai' && (
-            <div className="space-y-6">
-              <div className="glass-card p-8 rounded-[2.5rem] border border-white/10 bg-white/5">
-                <div className="flex justify-between items-start gap-6 mb-8">
-                  <div>
-                    <h3 className="text-xl font-bold text-white">AI Provider Keys</h3>
-                    <p className="text-sm text-slate-500 mt-1">Store up to 8 provider keys and choose which one powers agent responses.</p>
-                  </div>
-                  <div className="px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-300 text-xs font-bold border border-indigo-500/20">
-                    {aiProviders.length}/8 Added
+            <div className="glass-card p-10 rounded-[2.5rem] border border-white/10 bg-white/5 space-y-8">
+              <div className="p-6 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl flex items-start gap-4">
+                <BrainCircuit className="w-8 h-8 text-indigo-400 flex-shrink-0 mt-1" />
+                <div className="space-y-1">
+                  <h4 className="text-white font-bold text-lg">Centralized AI Routing Enabled</h4>
+                  <p className="text-sm text-indigo-200/70 leading-relaxed">
+                    To ensure high availability, optimal latency, and seamless failovers, Conversa AI manages LLM credentials centrally. You do not need to supply or manage your own private API keys.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                <div className="p-6 bg-white/2 border border-white/5 rounded-2xl space-y-3">
+                  <h4 className="text-white font-bold text-sm">Active Provider Access</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Your account automatically accesses the platform's routed pools for the following foundational LLMs:
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {['OpenAI', 'Gemini', 'Grok', 'Anthropic', 'DeepSeek', 'Mistral', 'Groq'].map(p => (
+                      <span key={p} className="px-2.5 py-1 rounded-lg bg-black/40 border border-white/5 text-[10px] font-bold text-slate-300 uppercase tracking-wider">{p}</span>
+                    ))}
                   </div>
                 </div>
 
-                {providerError && (
-                  <div className="mb-6 rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-200">
-                    {providerError}
-                  </div>
-                )}
-
-                <form onSubmit={saveProvider} className="grid grid-cols-1 lg:grid-cols-6 gap-4 mb-8">
-                  <select
-                    value={providerForm.provider}
-                    onChange={(e) => setProviderForm({ ...providerForm, provider: e.target.value })}
-                    className="lg:col-span-1 bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-indigo-500 outline-none"
-                  >
-                    {(supportedProviders.length ? supportedProviders : ['openai', 'gemini', 'grok', 'anthropic', 'deepseek', 'mistral', 'openrouter', 'groq']).map(provider => (
-                      <option key={provider} value={provider}>{provider}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    value={providerForm.label}
-                    onChange={(e) => setProviderForm({ ...providerForm, label: e.target.value })}
-                    placeholder="Label"
-                    className="lg:col-span-1 bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-indigo-500 outline-none"
-                  />
-                  <input
-                    type="password"
-                    value={providerForm.apiKey}
-                    onChange={(e) => setProviderForm({ ...providerForm, apiKey: e.target.value })}
-                    placeholder="API key"
-                    required
-                    className="lg:col-span-2 bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-indigo-500 outline-none"
-                  />
-                  <input
-                    type="text"
-                    value={providerForm.modelName}
-                    onChange={(e) => setProviderForm({ ...providerForm, modelName: e.target.value })}
-                    placeholder="Model override"
-                    className="lg:col-span-1 bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-indigo-500 outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={providerSaving || aiProviders.length >= 8 && !aiProviders.some(provider => provider.provider === providerForm.provider)}
-                    className="lg:col-span-1 flex items-center justify-center gap-2 px-5 py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 disabled:opacity-60"
-                  >
-                    {providerSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                    Save
-                  </button>
-                  <input
-                    type="text"
-                    value={providerForm.baseUrl}
-                    onChange={(e) => setProviderForm({ ...providerForm, baseUrl: e.target.value })}
-                    placeholder="Optional OpenAI-compatible base URL"
-                    className="lg:col-span-5 bg-black/40 border border-white/10 rounded-xl p-4 text-white focus:border-indigo-500 outline-none"
-                  />
-                  <label className="lg:col-span-1 flex items-center gap-3 text-sm text-slate-300 bg-black/40 border border-white/10 rounded-xl px-4">
-                    <input
-                      type="checkbox"
-                      checked={providerForm.makeActive}
-                      onChange={(e) => setProviderForm({ ...providerForm, makeActive: e.target.checked })}
-                    />
-                    Make active
-                  </label>
-                </form>
-
-                {providerLoading ? (
-                  <div className="py-10 flex justify-center">
-                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {aiProviders.length ? aiProviders.map(provider => (
-                      <div key={provider.id} className="p-5 bg-black/40 border border-white/5 rounded-2xl flex flex-col md:flex-row md:items-center gap-4">
-                        <div className="p-3 bg-indigo-500/10 rounded-2xl h-fit">
-                          <KeyRound className="w-5 h-5 text-indigo-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3">
-                            <p className="text-white font-bold capitalize">{provider.label}</p>
-                            {provider.isActive && (
-                              <span className="flex items-center gap-1 text-xs text-emerald-300 bg-emerald-400/10 px-2 py-1 rounded-full">
-                                <CheckCircle2 className="w-3 h-3" /> Active
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {provider.provider} • {provider.keyPreview} • {provider.modelName || 'default model'}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          {!provider.isActive && (
-                            <button onClick={() => setActiveProvider(provider.id)} className="px-4 py-2 bg-white/5 text-white rounded-xl text-sm font-bold hover:bg-white/10">
-                              Use
-                            </button>
-                          )}
-                          <button onClick={() => deleteProvider(provider.id)} className="p-2 hover:bg-red-400/10 rounded-xl text-slate-500 hover:text-red-400">
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
-                    )) : (
-                      <div className="py-10 text-center rounded-2xl border border-dashed border-white/10 text-slate-500">
-                        No provider keys saved yet. Add OpenAI, Gemini, Grok, or another supported provider above.
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="p-6 bg-white/2 border border-white/5 rounded-2xl space-y-3">
+                  <h4 className="text-white font-bold text-sm">Orchestration & Load Balancing</h4>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    The platform operator secures keys across multiple provider accounts. Your agents are backed by automatic:
+                  </p>
+                  <ul className="text-xs text-slate-400 space-y-2 list-disc pl-4">
+                    <li>Weighted Load Balancing (for peak demand)</li>
+                    <li>Sequential Round-Robin query distribution</li>
+                    <li>Automated Failover Rings (prevents outage drop-offs)</li>
+                  </ul>
+                </div>
               </div>
             </div>
           )}

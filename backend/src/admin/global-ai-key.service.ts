@@ -39,20 +39,34 @@ export class GlobalAiKeyService {
       throw new BadRequestException('API key is required');
     }
 
-    const key = await this.prisma.globalAiKey.create({
-      data: {
-        provider: input.provider.toLowerCase().trim(),
-        label: input.label.trim(),
-        encryptedApiKey: this.encrypt(input.apiKey.trim()),
-        keyPreview: this.preview(input.apiKey.trim()),
-        modelName: input.modelName?.trim() || null,
-        baseUrl: input.baseUrl?.trim() || null,
-        weight: input.weight ?? 1,
-        isActive: input.isActive ?? true,
-      },
-    });
+    const rawKeys = input.apiKey.split(',').map(k => k.trim()).filter(Boolean);
+    if (rawKeys.length === 0) {
+      throw new BadRequestException('API key is required');
+    }
 
-    return this.publicFormat(key);
+    let firstKeyRecord: any = null;
+
+    for (let i = 0; i < rawKeys.length; i++) {
+      const keyStr = rawKeys[i];
+      const countLabel = rawKeys.length > 1 ? ` #${i + 1}` : '';
+      const keyRecord = await this.prisma.globalAiKey.create({
+        data: {
+          provider: input.provider.toLowerCase().trim(),
+          label: `${input.label.trim()}${countLabel}`,
+          encryptedApiKey: this.encrypt(keyStr),
+          keyPreview: this.preview(keyStr),
+          modelName: input.modelName?.trim() || null,
+          baseUrl: input.baseUrl?.trim() || null,
+          weight: input.weight ?? 1,
+          isActive: input.isActive ?? true,
+        },
+      });
+      if (i === 0) {
+        firstKeyRecord = keyRecord;
+      }
+    }
+
+    return this.publicFormat(firstKeyRecord);
   }
 
   async remove(id: string) {

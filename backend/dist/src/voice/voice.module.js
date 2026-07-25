@@ -10,14 +10,16 @@ exports.VoiceModule = void 0;
 const common_1 = require("@nestjs/common");
 const voice_service_1 = require("./voice.service");
 const voice_controller_1 = require("./voice.controller");
+const voice_telephony_controller_1 = require("./voice-telephony.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
+const conversation_module_1 = require("../conversation/conversation.module");
 let VoiceModule = class VoiceModule {
 };
 exports.VoiceModule = VoiceModule;
 exports.VoiceModule = VoiceModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
-        controllers: [voice_controller_1.VoiceController],
+        imports: [prisma_module_1.PrismaModule, conversation_module_1.ConversationModule],
+        controllers: [voice_controller_1.VoiceController, voice_telephony_controller_1.VoiceTelephonyController],
         providers: [voice_service_1.VoiceService],
         exports: [voice_service_1.VoiceService],
     })

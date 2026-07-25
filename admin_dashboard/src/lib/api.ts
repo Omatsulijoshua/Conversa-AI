@@ -1,7 +1,11 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
-  const adminToken = process.env.NEXT_PUBLIC_ADMIN_DASHBOARD_TOKEN;
+  let adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+  if (!adminToken) {
+    adminToken = process.env.NEXT_PUBLIC_ADMIN_DASHBOARD_TOKEN || null;
+  }
+
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   const response = await fetch(`${API_URL}/${cleanEndpoint}`, {
     ...options,
@@ -11,6 +15,12 @@ export async function apiRequest(endpoint: string, options: RequestInit = {}) {
       ...options.headers,
     },
   });
+
+  if (response.status === 401 && typeof window !== 'undefined') {
+    localStorage.removeItem('admin_token');
+    window.location.href = '/login';
+    throw new Error('Unauthorized');
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Request failed' }));

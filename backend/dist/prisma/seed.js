@@ -34,8 +34,15 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const client_1 = require("@prisma/client");
+const adapter_pg_1 = require("@prisma/adapter-pg");
 const bcrypt = __importStar(require("bcrypt"));
-const prisma = new client_1.PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+    throw new Error('DATABASE_URL environment variable is required');
+}
+const prisma = new client_1.PrismaClient({
+    adapter: new adapter_pg_1.PrismaPg({ connectionString }),
+});
 async function main() {
     const adminEmail = 'admin@conversa.ai';
     const hashedPassword = await bcrypt.hash('admin_password', 10);

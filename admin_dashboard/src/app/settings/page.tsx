@@ -256,12 +256,12 @@ export default function AdminSettings() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Secret API Key</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Secret API Key(s) (comma-separated)</label>
                       <input
-                        type="password"
+                        type="text"
                         value={form.apiKey}
                         onChange={(e) => setForm({ ...form, apiKey: e.target.value })}
-                        placeholder="sk-proj-..."
+                        placeholder="key1, key2, key3"
                         required
                         className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-indigo-500 outline-none text-sm"
                       />

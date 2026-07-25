@@ -26,6 +26,10 @@ const menuItems = [
 export default function Sidebar() {
   const pathname = usePathname();
 
+  if (pathname === '/login') {
+    return null;
+  }
+
   return (
     <aside className="w-72 h-screen border-r border-white/5 flex flex-col p-6 sticky top-0">
       <div className="flex items-center gap-3 mb-12 px-4">
