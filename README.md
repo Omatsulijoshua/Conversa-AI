@@ -6,6 +6,13 @@ Conversa AI is an **API-first, multi-tenant Voice & Chat AI customer service pla
 
 Featuring a **Bring Your Own Key (BYOK)** architecture, a **Neural Voice Lab** for custom voice cloning, and a seamless **Retrieval-Augmented Generation (RAG)** knowledge base ingestion pipeline, Conversa AI bridges the gap between static chatbots and natural voice conversations.
 
+### 🤝 Relationship to Voice Providers (e.g. ElevenLabs)
+
+Conversa AI is **not** a competitor to ElevenLabs; rather, it is a downstream orchestration platform that integrates ElevenLabs' voice engine:
+*   **ElevenLabs** acts as the **vocal chords** of the system, providing high-fidelity Text-to-Speech (TTS) and voice cloning.
+*   **LLMs (OpenAI, Gemini, Grok, etc.)** act as the **brain**, determining what the agent should say based on instructions and database context.
+*   **Conversa AI** acts as the **orchestrator**—handling user authentication, routing phone calls via Twilio, indexing custom files for RAG queries, encrypting API keys, tracking usage metrics, and coordinating services.
+
 ---
 
 ## 🏛️ Architecture & Platform Topology
