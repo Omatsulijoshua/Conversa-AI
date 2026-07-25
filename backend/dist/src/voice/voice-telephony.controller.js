@@ -23,9 +23,9 @@ let VoiceTelephonyController = class VoiceTelephonyController {
         this.conversationService = conversationService;
         this.prisma = prisma;
     }
-    async inbound(agentId, tenantId) {
-        let activeAgentId = agentId;
-        let activeTenantId = tenantId;
+    async inbound(paramTenantId, paramAgentId, queryAgentId, queryTenantId) {
+        let activeAgentId = paramAgentId || queryAgentId;
+        let activeTenantId = paramTenantId || queryTenantId;
         if (!activeAgentId || !activeTenantId) {
             const agent = await this.prisma.agent.findFirst({
                 include: { tenant: true },
@@ -42,24 +42,27 @@ let VoiceTelephonyController = class VoiceTelephonyController {
         const conversation = await this.conversationService.start(activeTenantId, activeAgentId);
         return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="/api/v1/voice/telephony/respond?agentId=${activeAgentId}&amp;tenantId=${activeTenantId}&amp;sessionId=${conversation.sessionId}" method="POST" speechTimeout="auto" speechModel="phone_call">
+  <Gather input="speech" action="/api/v1/voice/telephony/respond/${activeTenantId}/${activeAgentId}?sessionId=${conversation.sessionId}" method="POST" speechTimeout="auto" speechModel="phone_call">
     <Say voice="Polly.Joanna-Neural">Hello! Thank you for calling. How can I help you today?</Say>
   </Gather>
   <Say voice="Polly.Joanna-Neural">We did not receive any input. Goodbye.</Say>
 </Response>`;
     }
-    async respond(speechResult, agentId, tenantId, sessionId) {
-        if (!speechResult || !agentId || !tenantId || !sessionId) {
+    async respond(speechResult, paramTenantId, paramAgentId, queryAgentId, queryTenantId, sessionId) {
+        const activeAgentId = paramAgentId || queryAgentId;
+        const activeTenantId = paramTenantId || queryTenantId;
+        const activeSessionId = sessionId;
+        if (!speechResult || !activeAgentId || !activeTenantId || !activeSessionId) {
             return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="Polly.Joanna-Neural">I am sorry, I did not catch that. Goodbye.</Say>
 </Response>`;
         }
         try {
-            const reply = await this.conversationService.message(tenantId, sessionId, speechResult);
+            const reply = await this.conversationService.message(activeTenantId, activeSessionId, speechResult);
             return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="/api/v1/voice/telephony/respond?agentId=${agentId}&amp;tenantId=${tenantId}&amp;sessionId=${sessionId}" method="POST" speechTimeout="auto" speechModel="phone_call">
+  <Gather input="speech" action="/api/v1/voice/telephony/respond/${activeTenantId}/${activeAgentId}?sessionId=${activeSessionId}" method="POST" speechTimeout="auto" speechModel="phone_call">
     <Say voice="Polly.Joanna-Neural">${reply.response}</Say>
   </Gather>
   <Say voice="Polly.Joanna-Neural">Thank you for calling. Goodbye.</Say>
@@ -77,24 +80,30 @@ let VoiceTelephonyController = class VoiceTelephonyController {
 exports.VoiceTelephonyController = VoiceTelephonyController;
 __decorate([
     (0, common_1.Post)('inbound'),
+    (0, common_1.Post)('inbound/:tenantId/:agentId'),
     (0, common_1.HttpCode)(200),
     (0, common_1.Header)('Content-Type', 'text/xml'),
-    __param(0, (0, common_1.Query)('agentId')),
-    __param(1, (0, common_1.Query)('tenantId')),
+    __param(0, (0, common_1.Param)('tenantId')),
+    __param(1, (0, common_1.Param)('agentId')),
+    __param(2, (0, common_1.Query)('agentId')),
+    __param(3, (0, common_1.Query)('tenantId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], VoiceTelephonyController.prototype, "inbound", null);
 __decorate([
     (0, common_1.Post)('respond'),
+    (0, common_1.Post)('respond/:tenantId/:agentId'),
     (0, common_1.HttpCode)(200),
     (0, common_1.Header)('Content-Type', 'text/xml'),
     __param(0, (0, common_1.Body)('SpeechResult')),
-    __param(1, (0, common_1.Query)('agentId')),
-    __param(2, (0, common_1.Query)('tenantId')),
-    __param(3, (0, common_1.Query)('sessionId')),
+    __param(1, (0, common_1.Param)('tenantId')),
+    __param(2, (0, common_1.Param)('agentId')),
+    __param(3, (0, common_1.Query)('agentId')),
+    __param(4, (0, common_1.Query)('tenantId')),
+    __param(5, (0, common_1.Query)('sessionId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], VoiceTelephonyController.prototype, "respond", null);
 exports.VoiceTelephonyController = VoiceTelephonyController = __decorate([

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Query, Header, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, Query, Header, HttpCode, Param } from '@nestjs/common';
 import { ConversationService } from '../conversation/conversation.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -10,14 +10,17 @@ export class VoiceTelephonyController {
   ) {}
 
   @Post('inbound')
+  @Post('inbound/:tenantId/:agentId')
   @HttpCode(200)
   @Header('Content-Type', 'text/xml')
   async inbound(
-    @Query('agentId') agentId?: string,
-    @Query('tenantId') tenantId?: string,
+    @Param('tenantId') paramTenantId?: string,
+    @Param('agentId') paramAgentId?: string,
+    @Query('agentId') queryAgentId?: string,
+    @Query('tenantId') queryTenantId?: string,
   ) {
-    let activeAgentId = agentId;
-    let activeTenantId = tenantId;
+    let activeAgentId = paramAgentId || queryAgentId;
+    let activeTenantId = paramTenantId || queryTenantId;
 
     if (!activeAgentId || !activeTenantId) {
       const agent = await this.prisma.agent.findFirst({
@@ -38,7 +41,7 @@ export class VoiceTelephonyController {
 
     return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="/api/v1/voice/telephony/respond?agentId=${activeAgentId}&amp;tenantId=${activeTenantId}&amp;sessionId=${conversation.sessionId}" method="POST" speechTimeout="auto" speechModel="phone_call">
+  <Gather input="speech" action="/api/v1/voice/telephony/respond/${activeTenantId}/${activeAgentId}?sessionId=${conversation.sessionId}" method="POST" speechTimeout="auto" speechModel="phone_call">
     <Say voice="Polly.Joanna-Neural">Hello! Thank you for calling. How can I help you today?</Say>
   </Gather>
   <Say voice="Polly.Joanna-Neural">We did not receive any input. Goodbye.</Say>
@@ -46,15 +49,22 @@ export class VoiceTelephonyController {
   }
 
   @Post('respond')
+  @Post('respond/:tenantId/:agentId')
   @HttpCode(200)
   @Header('Content-Type', 'text/xml')
   async respond(
     @Body('SpeechResult') speechResult?: string,
-    @Query('agentId') agentId?: string,
-    @Query('tenantId') tenantId?: string,
+    @Param('tenantId') paramTenantId?: string,
+    @Param('agentId') paramAgentId?: string,
+    @Query('agentId') queryAgentId?: string,
+    @Query('tenantId') queryTenantId?: string,
     @Query('sessionId') sessionId?: string,
   ) {
-    if (!speechResult || !agentId || !tenantId || !sessionId) {
+    const activeAgentId = paramAgentId || queryAgentId;
+    const activeTenantId = paramTenantId || queryTenantId;
+    const activeSessionId = sessionId;
+
+    if (!speechResult || !activeAgentId || !activeTenantId || !activeSessionId) {
       return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Say voice="Polly.Joanna-Neural">I am sorry, I did not catch that. Goodbye.</Say>
@@ -63,11 +73,11 @@ export class VoiceTelephonyController {
 
     try {
       // Get AI Agent's text response using our business logic and policies
-      const reply = await this.conversationService.message(tenantId, sessionId, speechResult);
+      const reply = await this.conversationService.message(activeTenantId, activeSessionId, speechResult);
 
       return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
-  <Gather input="speech" action="/api/v1/voice/telephony/respond?agentId=${agentId}&amp;tenantId=${tenantId}&amp;sessionId=${sessionId}" method="POST" speechTimeout="auto" speechModel="phone_call">
+  <Gather input="speech" action="/api/v1/voice/telephony/respond/${activeTenantId}/${activeAgentId}?sessionId=${activeSessionId}" method="POST" speechTimeout="auto" speechModel="phone_call">
     <Say voice="Polly.Joanna-Neural">${reply.response}</Say>
   </Gather>
   <Say voice="Polly.Joanna-Neural">Thank you for calling. Goodbye.</Say>

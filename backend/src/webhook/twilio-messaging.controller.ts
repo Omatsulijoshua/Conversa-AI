@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Query, Header, HttpCode } from '@nestjs/common';
+import { Controller, Post, Body, Query, Header, HttpCode, Param } from '@nestjs/common';
 import { ConversationService } from '../conversation/conversation.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -10,21 +10,24 @@ export class TwilioMessagingController {
   ) {}
 
   @Post('messaging')
+  @Post('messaging/:tenantId/:agentId')
   @HttpCode(200)
   @Header('Content-Type', 'text/xml')
   async handleIncomingMessage(
     @Body('Body') body?: string,
     @Body('From') from?: string,
-    @Query('agentId') agentId?: string,
-    @Query('tenantId') tenantId?: string,
+    @Param('tenantId') paramTenantId?: string,
+    @Param('agentId') paramAgentId?: string,
+    @Query('agentId') queryAgentId?: string,
+    @Query('tenantId') queryTenantId?: string,
   ) {
     if (!body || !from) {
       return `<?xml version="1.0" encoding="UTF-8"?>
 <Response />`;
     }
 
-    let activeAgentId = agentId;
-    let activeTenantId = tenantId;
+    let activeAgentId = paramAgentId || queryAgentId;
+    let activeTenantId = paramTenantId || queryTenantId;
 
     // Resolve agent and tenant if not passed
     if (!activeAgentId || !activeTenantId) {

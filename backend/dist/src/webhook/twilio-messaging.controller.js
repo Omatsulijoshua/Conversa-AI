@@ -23,13 +23,13 @@ let TwilioMessagingController = class TwilioMessagingController {
         this.conversationService = conversationService;
         this.prisma = prisma;
     }
-    async handleIncomingMessage(body, from, agentId, tenantId) {
+    async handleIncomingMessage(body, from, paramTenantId, paramAgentId, queryAgentId, queryTenantId) {
         if (!body || !from) {
             return `<?xml version="1.0" encoding="UTF-8"?>
 <Response />`;
         }
-        let activeAgentId = agentId;
-        let activeTenantId = tenantId;
+        let activeAgentId = paramAgentId || queryAgentId;
+        let activeTenantId = paramTenantId || queryTenantId;
         if (!activeAgentId || !activeTenantId) {
             const agent = await this.prisma.agent.findFirst({
                 include: { tenant: true },
@@ -68,14 +68,17 @@ let TwilioMessagingController = class TwilioMessagingController {
 exports.TwilioMessagingController = TwilioMessagingController;
 __decorate([
     (0, common_1.Post)('messaging'),
+    (0, common_1.Post)('messaging/:tenantId/:agentId'),
     (0, common_1.HttpCode)(200),
     (0, common_1.Header)('Content-Type', 'text/xml'),
     __param(0, (0, common_1.Body)('Body')),
     __param(1, (0, common_1.Body)('From')),
-    __param(2, (0, common_1.Query)('agentId')),
-    __param(3, (0, common_1.Query)('tenantId')),
+    __param(2, (0, common_1.Param)('tenantId')),
+    __param(3, (0, common_1.Param)('agentId')),
+    __param(4, (0, common_1.Query)('agentId')),
+    __param(5, (0, common_1.Query)('tenantId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], TwilioMessagingController.prototype, "handleIncomingMessage", null);
 exports.TwilioMessagingController = TwilioMessagingController = __decorate([

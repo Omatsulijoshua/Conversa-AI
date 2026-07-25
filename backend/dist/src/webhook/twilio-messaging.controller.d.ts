@@ -4,5 +4,5 @@ export declare class TwilioMessagingController {
     private readonly conversationService;
     private readonly prisma;
     constructor(conversationService: ConversationService, prisma: PrismaService);
-    handleIncomingMessage(body?: string, from?: string, agentId?: string, tenantId?: string): Promise<string>;
+    handleIncomingMessage(body?: string, from?: string, paramTenantId?: string, paramAgentId?: string, queryAgentId?: string, queryTenantId?: string): Promise<string>;
 }

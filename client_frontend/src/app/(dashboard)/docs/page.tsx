@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { apiRequest } from '@/lib/api';
 import {
   ArrowRight,
   BookOpenCheck,
@@ -53,8 +54,48 @@ const videoExamples = [
   'Connecting a phone number to Conversa AI',
 ];
 
+function getTenantId() {
+  if (typeof window === 'undefined') return '';
+  const token = localStorage.getItem('conversa_token');
+  if (!token) return '';
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      window.atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload).sub || '';
+  } catch (e) {
+    return '';
+  }
+}
+
 export default function DocsPage() {
   const [activeTab, setActiveTab] = useState<'api' | 'twilio' | 'telnyx' | 'asterisk' | 'apps'>('api');
+  const [tenantId, setTenantId] = useState('');
+  const [agentId, setAgentId] = useState('');
+
+  useEffect(() => {
+    const tId = getTenantId();
+    setTenantId(tId || 'YOUR_TENANT_ID');
+
+    async function loadAgents() {
+      try {
+        const data = await apiRequest('/agents');
+        if (data && data.length > 0) {
+          setAgentId(data[0].id);
+        } else {
+          setAgentId('YOUR_AGENT_ID');
+        }
+      } catch (err) {
+        setAgentId('YOUR_AGENT_ID');
+      }
+    }
+    loadAgents();
+  }, []);
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -237,7 +278,7 @@ Body:
                     Under Twilio Phone Number settings, go to the <strong>Voice & Fax</strong> section. Set the <strong>A CALL COMES IN</strong> webhook to:
                   </p>
                   <code className="block bg-black/60 p-2.5 rounded-lg text-[10px] text-indigo-300 font-mono break-all select-all">
-                    https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound
+                    {`https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound/${tenantId}/${agentId}`}
                   </code>
                 </div>
 
@@ -248,7 +289,7 @@ Body:
                     Under Twilio Phone Number settings, go to the <strong>Messaging</strong> section. Set the <strong>A MESSAGE COMES IN</strong> webhook to:
                   </p>
                   <code className="block bg-black/60 p-2.5 rounded-lg text-[10px] text-indigo-300 font-mono break-all select-all">
-                    https://conversa-backend-6bou.onrender.com/api/v1/webhooks/twilio/messaging
+                    {`https://conversa-backend-6bou.onrender.com/api/v1/webhooks/twilio/messaging/${tenantId}/${agentId}`}
                   </code>
                 </div>
 
@@ -259,7 +300,7 @@ Body:
                     Go to <strong>Messaging &gt; Try it out &gt; WhatsApp Sandbox</strong> or your approved Sender settings. Set the incoming message webhook to:
                   </p>
                   <code className="block bg-black/60 p-2.5 rounded-lg text-[10px] text-indigo-300 font-mono break-all select-all">
-                    https://conversa-backend-6bou.onrender.com/api/v1/webhooks/twilio/messaging
+                    {`https://conversa-backend-6bou.onrender.com/api/v1/webhooks/twilio/messaging/${tenantId}/${agentId}`}
                   </code>
                 </div>
               </div>
@@ -281,7 +322,7 @@ Body:
                   <li>Go to <strong>Voice & Fax &gt; Programmable Voice</strong>. Under the <strong>TeXML</strong> tab, click <strong>Create TeXML Application</strong>.</li>
                   <li>In the <strong>Details</strong> tab of your new TeXML Application, set the <strong>Webhook URL</strong> to:
                     <code className="block bg-black/60 p-2.5 mt-2 rounded-lg text-[10px] text-indigo-300 font-mono break-all select-all">
-                      https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound
+                      {`https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound/${tenantId}/${agentId}`}
                     </code>
                   </li>
                   <li>Go to <strong>My Numbers</strong>, click <strong>Edit</strong> on your number, select <strong>TeXML Application</strong> under connection, and assign your new App.</li>
