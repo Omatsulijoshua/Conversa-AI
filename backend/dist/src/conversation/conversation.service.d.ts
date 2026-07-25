@@ -6,7 +6,7 @@ export declare class ConversationService {
     private ai;
     private knowledge;
     constructor(prisma: PrismaService, ai: AiService, knowledge: KnowledgeService);
-    start(tenantId: string, agentId: string): Promise<{
+    start(tenantId: string, agentId: string, customSessionId?: string): Promise<{
         id: string;
         createdAt: Date;
         updatedAt: Date;

@@ -10,12 +10,15 @@ exports.WebhookModule = void 0;
 const common_1 = require("@nestjs/common");
 const webhook_controller_1 = require("./webhook.controller");
 const webhook_service_1 = require("./webhook.service");
+const twilio_messaging_controller_1 = require("./twilio-messaging.controller");
+const conversation_module_1 = require("../conversation/conversation.module");
 let WebhookModule = class WebhookModule {
 };
 exports.WebhookModule = WebhookModule;
 exports.WebhookModule = WebhookModule = __decorate([
     (0, common_1.Module)({
-        controllers: [webhook_controller_1.WebhookController],
+        imports: [conversation_module_1.ConversationModule],
+        controllers: [webhook_controller_1.WebhookController, twilio_messaging_controller_1.TwilioMessagingController],
         providers: [webhook_service_1.WebhookService],
         exports: [webhook_service_1.WebhookService],
     })

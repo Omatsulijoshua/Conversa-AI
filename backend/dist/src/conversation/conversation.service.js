@@ -24,14 +24,14 @@ let ConversationService = class ConversationService {
         this.ai = ai;
         this.knowledge = knowledge;
     }
-    async start(tenantId, agentId) {
+    async start(tenantId, agentId, customSessionId) {
         const agent = await this.prisma.agent.findFirst({
             where: { id: agentId, tenantId },
         });
         if (!agent) {
             throw new common_1.NotFoundException('Agent not found');
         }
-        const sessionId = (0, uuid_1.v4)();
+        const sessionId = customSessionId || (0, uuid_1.v4)();
         return this.prisma.conversation.create({
             data: {
                 sessionId,

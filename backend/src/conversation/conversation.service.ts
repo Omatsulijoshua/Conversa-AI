@@ -12,7 +12,7 @@ export class ConversationService {
     private knowledge: KnowledgeService,
   ) {}
 
-  async start(tenantId: string, agentId: string) {
+  async start(tenantId: string, agentId: string, customSessionId?: string) {
     const agent = await this.prisma.agent.findFirst({
       where: { id: agentId, tenantId },
     });
@@ -21,7 +21,7 @@ export class ConversationService {
       throw new NotFoundException('Agent not found');
     }
 
-    const sessionId = uuidv4();
+    const sessionId = customSessionId || uuidv4();
     return this.prisma.conversation.create({
       data: {
         sessionId,
