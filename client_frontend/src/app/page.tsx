@@ -93,10 +93,7 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="flex items-center justify-between p-6 max-w-7xl mx-auto border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
-            <Mic2 className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-xl font-bold tracking-tight">Conversa <span className="text-indigo-500">AI</span></span>
+          <img src="/logo.png" alt="Conversa AI" className="h-10 w-auto object-contain" />
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-400">
           <Link href="#features" className="hover:text-white transition-colors">Features</Link>
@@ -280,10 +277,8 @@ export default function LandingPage() {
       <footer className="border-t border-white/5 py-12 bg-black/40">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center gap-2.5 opacity-60">
-            <div className="w-8 h-8 bg-indigo-600/20 rounded-lg flex items-center justify-center">
-              <Mic2 className="w-4 h-4 text-indigo-400" />
-            </div>
-            <span className="font-bold text-sm">Conversa AI © 2026</span>
+            <img src="/logo.png" alt="Conversa AI" className="h-6 w-auto object-contain" />
+            <span className="font-bold text-sm">© 2026</span>
           </div>
           <div className="flex gap-8 text-xs text-slate-500">
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>

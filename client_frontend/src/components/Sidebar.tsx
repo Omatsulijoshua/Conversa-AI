@@ -36,10 +36,7 @@ export default function Sidebar() {
       {/* Mobile Header Bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950 border-b border-white/5 flex items-center justify-between px-6 z-40">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <Mic2 className="text-white w-5 h-5" />
-          </div>
-          <span className="text-lg font-bold tracking-tight text-white">Conversa <span className="text-indigo-500">AI</span></span>
+          <img src="/logo.png" alt="Conversa AI" className="h-9 w-auto object-contain" />
         </div>
         <button 
           onClick={() => setIsOpen(!isOpen)}
@@ -63,13 +60,8 @@ export default function Sidebar() {
         md:sticky md:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
-        <div className="flex items-center justify-between mb-12 px-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Mic2 className="text-white w-6 h-6" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-white">Conversa <span className="text-indigo-500">AI</span></span>
-          </div>
+        <div className="flex items-center justify-between mb-12 px-2">
+          <img src="/logo.png" alt="Conversa AI" className="h-10 w-auto object-contain" />
           <button 
             onClick={() => setIsOpen(false)}
             className="md:hidden p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-all"

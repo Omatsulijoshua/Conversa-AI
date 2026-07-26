@@ -51,12 +51,7 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md animate-fade-in">
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <Mic2 className="text-white w-7 h-7" />
-            </div>
-            <span className="text-3xl font-bold tracking-tight text-white">Conversa <span className="text-indigo-500">AI</span></span>
-          </div>
+          <img src="/logo.png" alt="Conversa AI" className="h-14 w-auto object-contain" />
         </div>
 
         <div className="glass-card p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl">
