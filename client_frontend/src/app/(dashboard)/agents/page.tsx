@@ -66,7 +66,7 @@ const KnowledgeModal = ({ agent, onClose }: { agent: any, onClose: () => void })
     try {
       // Note: apiRequest needs to handle FormData or we use fetch directly
       const token = localStorage.getItem('conversa_token');
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/knowledge/${kbId}/upload`, {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://conversa-backend-6bou.onrender.com/api/v1'}/knowledge/${kbId}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData

@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Lock, Mail, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, Loader2 } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@conversa.ai');
+  const [email, setEmail] = useState('joshuaomatsuli01@gmail.com');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,8 +20,8 @@ export default function AdminLoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) {
-      setError('Secure password (token) is required.');
+    if (!email || !password) {
+      setError('Email and password are required.');
       return;
     }
 
@@ -29,21 +29,25 @@ export default function AdminLoginPage() {
     setError('');
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-      const response = await fetch(`${API_URL}/admin/overview`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://conversa-backend-6bou.onrender.com/api/v1';
+      const response = await fetch(`${API_URL}/admin/login`, {
+        method: 'POST',
         headers: {
-          'x-admin-token': password,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        throw new Error('Unauthorized: Invalid admin dashboard token.');
+        throw new Error(data.message || 'Unauthorized: Invalid email or password.');
       }
 
-      localStorage.setItem('admin_token', password);
+      localStorage.setItem('admin_token', data.token);
       router.push('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please verify your token.');
+      setError(err.message || 'Authentication failed. Please verify your credentials.');
     } finally {
       setLoading(false);
     }
@@ -70,26 +74,28 @@ export default function AdminLoginPage() {
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-400 ml-1">Email Address</label>
-              <div className="relative opacity-60">
+              <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600" />
                 <input 
                   type="email" 
-                  disabled
-                  className="w-full bg-black/40 border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-slate-400 focus:outline-none cursor-not-allowed"
+                  required
+                  placeholder="admin@conversa.ai"
+                  className="w-full bg-black border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-indigo-600 transition-all placeholder:text-zinc-700"
                   value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-400 ml-1">Admin Security Token (Password)</label>
+              <label className="text-sm font-semibold text-slate-400 ml-1">Password</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-600" />
                 <input 
                   type="password" 
                   required
                   className="w-full bg-black border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-indigo-600 transition-all placeholder:text-zinc-700"
-                  placeholder="Paste your ADMIN_DASHBOARD_TOKEN"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -104,11 +110,11 @@ export default function AdminLoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Verifying Token...
+                  Authenticating...
                 </>
               ) : (
                 <>
-                  Enter Platform
+                  Sign In
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}

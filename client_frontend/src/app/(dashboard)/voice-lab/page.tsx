@@ -85,7 +85,7 @@ export default function VoiceLabPage() {
 
     try {
       const token = localStorage.getItem('conversa_token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/voice/clone`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://conversa-backend-6bou.onrender.com/api/v1'}/voice/clone`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData

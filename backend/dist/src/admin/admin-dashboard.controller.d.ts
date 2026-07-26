@@ -1,9 +1,14 @@
 import { ConfigService } from '@nestjs/config';
 import { AdminDashboardService } from './admin-dashboard.service';
+import { PrismaService } from '../prisma/prisma.service';
 export declare class AdminDashboardController {
     private readonly adminDashboardService;
     private readonly config;
-    constructor(adminDashboardService: AdminDashboardService, config: ConfigService);
+    private readonly prisma;
+    constructor(adminDashboardService: AdminDashboardService, config: ConfigService, prisma: PrismaService);
+    login(body: any): Promise<{
+        token: string;
+    }>;
     getOverview(adminToken?: string): Promise<{
         stats: {
             totalMessages: number;
