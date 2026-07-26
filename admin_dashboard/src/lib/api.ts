@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://conversa-backend-6bou.onrender.com/api/v1';
 
 export async function apiRequest(endpoint: string, options: RequestInit = {}) {
   let adminToken = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
