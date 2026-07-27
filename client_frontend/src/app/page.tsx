@@ -16,7 +16,9 @@ import {
   Play, 
   Headphones, 
   Infinity, 
-  Cpu 
+  Cpu,
+  Brain,
+  Layers
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -121,7 +123,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-slate-400 leading-relaxed">
-            Deploy cognitive voice and chat agents built on centralized routing rings. Harness ultra-low latency audio processing, instant voice cloning, and live FAQs automatically.
+            The Conversa platform empowers humans and AI agents to work together, coordinate across channels, and pick up every customer conversation where the last one left off. The infrastructure behind every magical customer moment.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6">
@@ -136,11 +138,65 @@ export default function LandingPage() {
         </div>
       </header>
 
+      {/* Pillars Section */}
+      <section id="pillars" className="max-w-7xl mx-auto px-6 py-20 border-t border-white/5">
+        <div className="text-center space-y-4 mb-20">
+          <h2 className="text-3xl md:text-5xl font-black">Remember Every Customer, Reach Them on Any Channel</h2>
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            Conversa connects communication channels, customer data, and AI orchestration to ensure every interaction feels unified, context-rich, and intelligent.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="glass-card p-8 rounded-[2rem] border border-white/10 bg-white/5 hover:border-indigo-500/30 transition-all space-y-4">
+            <div className="p-3.5 bg-indigo-600 rounded-xl w-fit">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Intelligent Self-Service</h3>
+            <p className="text-slate-450 leading-relaxed text-xs">
+              Turn every interaction &rarr; including first contact &rarr; into a personalized experience. AI agents draw from internal knowledge and real-time data so every conversation feels like a natural dialogue.
+            </p>
+          </div>
+
+          <div className="glass-card p-8 rounded-[2rem] border border-white/10 bg-white/5 hover:border-indigo-500/30 transition-all space-y-4">
+            <div className="p-3.5 bg-indigo-600 rounded-xl w-fit">
+              <ArrowRight className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Contextual Hand-off</h3>
+            <p className="text-slate-450 leading-relaxed text-xs">
+              AI agents know when to bring in a human based on complexity or customer intent. Conversations are transferred with full context, so customers never have to repeat themselves.
+            </p>
+          </div>
+
+          <div className="glass-card p-8 rounded-[2rem] border border-white/10 bg-white/5 hover:border-indigo-500/30 transition-all space-y-4">
+            <div className="p-3.5 bg-indigo-600 rounded-xl w-fit">
+              <Layers className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Cross-Channel Continuity</h3>
+            <p className="text-slate-450 leading-relaxed text-xs">
+              Customers can easily switch between channels like webchat, text, voice call, and social threads without losing progress or causing session interruption.
+            </p>
+          </div>
+
+          <div className="glass-card p-8 rounded-[2rem] border border-white/10 bg-white/5 hover:border-indigo-500/30 transition-all space-y-4">
+            <div className="p-3.5 bg-indigo-600 rounded-xl w-fit">
+              <Brain className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Persistent Memory</h3>
+            <p className="text-slate-450 leading-relaxed text-xs">
+              Conversa unifies customer data into a living memory, offering insight into a person's preferences, interests, and sentiment. Anticipate customer needs without them having to ask.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Feature Grid */}
       <section id="features" className="max-w-7xl mx-auto px-6 py-20 border-t border-white/5">
         <div className="text-center space-y-4 mb-20">
-          <h2 className="text-3xl md:text-5xl font-black">Everything You Need to Scale Support</h2>
-          <p className="text-slate-400 text-lg max-w-xl mx-auto">Conversa coordinates voice interfaces, AI context, and network telephony into one dashboard.</p>
+          <h2 className="text-3xl md:text-5xl font-black">Building Blocks for Every Conversation</h2>
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            Your toolkit is expanding. Discover a new generation of building blocks designed to orchestrate context-rich conversations across channels for humans and AI agents.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
