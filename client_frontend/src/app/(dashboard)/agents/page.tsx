@@ -577,25 +577,49 @@ call.stop();`}
               <div className="space-y-6">
                 <h4 className="text-lg font-bold text-white flex items-center gap-2">
                   <Cpu className="w-5 h-5 text-indigo-400" />
-                  Self-Hosted SIP PBX (Asterisk / FreePBX)
+                  Hosted SIP PBX & Trunks (Verizon, MTN, Softphones)
                 </h4>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Run your own open-source telephone exchange to connect direct office phone systems, local VoIP networks, or wholesale carriers (like Verizon, MTN Business, SIP Trunks) to Conversa.
+                  Connect direct corporate phone systems, local VoIP networks, or wholesale carriers (like Verizon, MTN Business, SIP Trunks) to Conversa.
                 </p>
 
-                <div className="p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl space-y-1.5">
-                  <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                    <Globe className="w-4 h-4 text-indigo-400" />
-                    SIP-to-SIP Testing (100% Free)
-                  </h5>
+                <div className="p-5 bg-indigo-600/15 border border-indigo-500/35 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <Globe className="w-4 h-4 text-indigo-400 animate-pulse" />
+                      Option A: Conversa Hosted SIP Gateway (No Setup Required)
+                    </h5>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                      ● Gateway Online
+                    </span>
+                  </div>
                   <p className="text-slate-300 text-[11px] leading-relaxed">
-                    To test dialing over SIP for free, sign up for a virtual SIP address at [SIP2SIP](https://sip2sip.info/), download the free **Linphone** or **Zoiper** softphone app on your computer/phone, log in, and call your SIP extensions over Wi-Fi.
+                    Simply configure your wholesale SIP trunk, softphone (e.g. Linphone), or corporate PBX to register to our central Hosted SIP Proxy. Calls will instantly route to this agent:
                   </p>
+                  <div className="grid grid-cols-2 gap-3 text-[11px] font-mono text-slate-300">
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Registrar / Host</span>
+                      <span className="text-indigo-300 break-all select-all">sip.conversa-ai.com</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Port</span>
+                      <span className="text-indigo-300">5060 (UDP)</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Username</span>
+                      <span className="text-indigo-300 select-all">conversa_usr_{agent.id.slice(0, 8)}</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Password</span>
+                      <span className="text-indigo-300 select-all">conversa_pass_{agent.id.slice(0, 8)}</span>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h5 className="font-bold text-white text-sm">Asterisk Dialplan Configuration</h5>
-                  <p className="text-slate-400 text-xs">Configure your self-hosted Asterisk PBX dialplan (`/etc/asterisk/extensions.conf`) to bridge incoming SIP calls (Extension `2000`) to this agent:</p>
+                <div className="space-y-2 border-t border-white/5 pt-4">
+                  <h5 className="font-bold text-white text-sm">Option B: Self-Hosted Asterisk Dialplan Configuration</h5>
+                  <p className="text-slate-400 text-xs">If you prefer hosting your own PBX, configure your `/etc/asterisk/extensions.conf` to route calls to Conversa:</p>
                   <div className="relative">
                     <pre className="p-4 bg-black/60 border border-white/10 rounded-2xl font-mono text-xs text-indigo-300 overflow-x-auto whitespace-pre-wrap">
 {`[conversa-inbound]
@@ -605,7 +629,7 @@ same => n,AGI(agi://conversa-agi.onrender.com,\${API_URL})
 same => n,Hangup()`}
                     </pre>
                     <button 
-                      onClick={() => copyToClipboard(`[conversa-inbound]\exten => 2000,1,NoOp(Forwarding to Conversa AI ${agent.name})\nsame => n,Set(API_URL=${webhookUrl})\nsame => n,AGI(agi://conversa-agi.onrender.com,\${API_URL})\nsame => n,Hangup()`)}
+                      onClick={() => copyToClipboard(`[conversa-inbound]\nexten => 2000,1,NoOp(Forwarding to Conversa AI ${agent.name})\nsame => n,Set(API_URL=${webhookUrl})\nsame => n,AGI(agi://conversa-agi.onrender.com,\${API_URL})\nsame => n,Hangup()`)}
                       className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-all"
                     >
                       {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -619,40 +643,69 @@ same => n,Hangup()`}
               <div className="space-y-6">
                 <h4 className="text-lg font-bold text-white flex items-center gap-2">
                   <Smartphone className="w-5 h-5 text-indigo-400" />
-                  GSM Android SIM Gateway (Self-Owned Hardware)
+                  GSM Android SIM Gateway (Self-Owned SIM Card)
                 </h4>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  If you want absolute carrier independence with zero cloud trunk subscription fees, you can turn a spare Android phone with a local cellular SIM card (MTN, Airtel, Safaricom, Safelink, etc.) into a physical voice gateway.
+                  Turn a spare Android phone with a local cellular SIM card (MTN, Airtel, Safaricom, Glo, etc.) into a physical voice gateway to receive phone calls at standard local mobile rates.
                 </p>
+
+                <div className="p-5 bg-indigo-600/15 border border-indigo-500/35 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                      <Smartphone className="w-4 h-4 text-indigo-400" />
+                      Option A: Use Conversa's Hosted SIP Proxy (No Server Setup Required)
+                    </h5>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                      ● Registration Ready
+                    </span>
+                  </div>
+                  <p className="text-slate-300 text-[11px] leading-relaxed">
+                    You do not need to host a server! Simply register your Android gateway client (like **Sim2Sip** or **Linphone**) to our hosted SIP gateway using these credentials:
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 text-[11px] font-mono text-slate-300">
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Registrar</span>
+                      <span className="text-indigo-300 break-all select-all">sip.conversa-ai.com</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Port</span>
+                      <span className="text-indigo-300">5060 (UDP)</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">Username (SIP User)</span>
+                      <span className="text-indigo-300 select-all">conversa_usr_{agent.id.slice(0, 8)}</span>
+                    </div>
+                    <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">Secret Key (SIP Pass)</span>
+                      <span className="text-indigo-300 select-all">conversa_pass_{agent.id.slice(0, 8)}</span>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="flex gap-2.5 items-start p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
                   <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <p className="text-amber-400 text-xs leading-relaxed font-semibold">
-                    Note: Due to Apple's strict background audio restrictions, this cellular-to-SIP bridge option is only possible on Android devices.
+                    Note: Due to Apple's background restriction policies, GSM-to-SIP software-based client apps only function reliably on Android devices.
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <h5 className="font-bold text-white text-sm">GSM-to-Cloud Bridge Setup Guide:</h5>
+                <div className="space-y-4 border-t border-white/5 pt-4">
+                  <h5 className="font-bold text-white text-sm">Step-by-Step Device Setup Guide:</h5>
                   <div className="grid grid-cols-1 gap-4 text-xs text-slate-300">
                     <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
-                      <p className="font-bold text-white mb-1">1. Set up a Local SIP Account</p>
-                      <p className="text-slate-400">Spin up a local PBX (like Asterisk/FreePBX) in a cloud container. Register a SIP Extension (e.g. extension `1001`) with a secure password.</p>
+                      <p className="font-bold text-white mb-1">1. Download a SIP Gateway Client</p>
+                      <p className="text-slate-400">Install **Linphone** or **Sim2Sip** on the Android phone that holds your MTN, Airtel, Safaricom, or Glo SIM card.</p>
                     </div>
 
                     <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
-                      <p className="font-bold text-white mb-1">2. Download a GSM-to-SIP Application</p>
-                      <p className="text-slate-400">Install a VoIP gateway client (such as **Linphone** or a specialized APK like **Sim2Sip**) on your Android phone containing the SIM card. Register the app to your cloud Asterisk server using extension `1001` credentials.</p>
+                      <p className="font-bold text-white mb-1">2. Register Your Phone to Conversa</p>
+                      <p className="text-slate-400">Log in to the gateway client app using the **Option A** credentials displayed above.</p>
                     </div>
 
                     <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
                       <p className="font-bold text-white mb-1">3. Grant System Permissions</p>
-                      <p className="text-slate-400">Go to Android settings and allow the app **Microphone** access (to capture caller voice), **Phone** access (to intercept calls), and **Display Over Other Apps** (to allow bridging in the background).</p>
-                    </div>
-
-                    <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
-                      <p className="font-bold text-white mb-1">4. Configure Auto-Answer & Routing</p>
-                      <p className="text-slate-400">Configure the gateway app to auto-answer incoming cell calls and forward the SIP stream to extension `2000` (your Conversa webhook). Callers dial your regular SIM mobile number, and are answered by Conversa AI!</p>
+                      <p className="text-slate-400">Allow the app **Microphone** access (to capture caller voice), **Phone** access (to intercept calls), and **Display Over Other Apps** (to run the gateway service in the background).</p>
                     </div>
                   </div>
                 </div>
