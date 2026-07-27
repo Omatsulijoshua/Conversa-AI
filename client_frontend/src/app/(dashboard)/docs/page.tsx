@@ -333,23 +333,70 @@ Body:
 
           {activeTab === 'asterisk' && (
             <div className="space-y-6 animate-slide-up">
-              <h3 className="text-xl font-bold text-white">Option 4: Self-Hosted SIP PBX Gateways (Asterisk/Verizon/GSM Hardware)</h3>
+              <h3 className="text-xl font-bold text-white">Option 4: Hosted SIP PBX & Android GSM SIM Gateways</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                If you are a telecom provider (like Verizon or MTN) or want to host a local physical GSM hardware gateway using SIM cards, you can route standard SIP connections to Conversa.
+                Connect direct office phone lines, corporate softphones, telecom trunks (Verizon, MTN), or physical Android GSM SIM gateways to route calls to Conversa AI without leaving your platform.
               </p>
 
-              <div className="p-6 bg-black/40 border border-white/10 rounded-2xl space-y-4">
-                <h4 className="font-bold text-indigo-400 text-sm">Asterisk Dialplan configuration (`extensions.conf`)</h4>
+              <div className="p-6 bg-indigo-650/15 border border-indigo-500/25 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-indigo-400 text-sm flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-indigo-400 animate-pulse" />
+                    Option A: Conversa Hosted SIP Gateway (No Setup Required)
+                  </h4>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    ● Active
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Register your wholesale SIP trunk, softphone, or GSM SIM Box gateway directly to our hosted proxy:
+                </p>
+                <div className="grid grid-cols-2 gap-3 font-mono text-[11px] text-indigo-300">
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Registrar</span>
+                    <span className="select-all">sip.conversa-ai.com</span>
+                  </div>
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Port</span>
+                    <span>5060 (UDP)</span>
+                  </div>
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">Username</span>
+                    <span className="select-all">conversa_usr_{agentId.slice(0, 8)}</span>
+                  </div>
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-xl">
+                    <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">Password</span>
+                    <span className="select-all">conversa_pass_{agentId.slice(0, 8)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-black/30 border border-white/10 rounded-2xl space-y-3">
+                <h4 className="font-bold text-white text-sm">📱 GSM SIM Gateway Guide (MTN, Airtel, Glo, Safaricom)</h4>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Bridge a physical SIM card (like your MTN mobile line) so callers dial a standard phone number:
+                </p>
+                <ol className="list-decimal pl-5 space-y-1.5 text-xs text-slate-400 leading-relaxed">
+                  <li>Insert the MTN/local SIM card into an Android phone.</li>
+                  <li>Install a SIP VoIP client app like **Linphone** or a specialized APK like **Sim2Sip**.</li>
+                  <li>Log in to the app using the **Option A** credentials displayed above.</li>
+                  <li>In the app's settings, enable **Auto-Answer Incoming Calls** and route them through the SIP profile.</li>
+                  <li>In Android settings, grant the app Microphone, Phone call interception, and background execution permissions.</li>
+                  <li>Callers dial your regular MTN cellular number, and your Android phone auto-answers and routes them directly to Conversa!</li>
+                </ol>
+              </div>
+
+              <div className="p-6 bg-black/40 border border-white/10 rounded-2xl space-y-3">
+                <h4 className="font-bold text-white text-sm">💻 Option B: Self-Hosted Asterisk Configuration</h4>
                 <p className="text-xs text-slate-400">
-                  Configure Asterisk to answer incoming SIP lines and run an AGI script (or call a custom API wrapper) to pass audio streams directly to Conversa's voice endpoints:
+                  If you prefer hosting your own cloud PBX server, configure `/etc/asterisk/extensions.conf` to answer and forward calls:
                 </p>
                 <pre className="bg-black/60 p-4 rounded-xl text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
 {`[incoming-sip-carrier]
-exten => _+X.,1,NoOp(Incoming SIP call from carrier)
+exten => 2000,1,NoOp(Relaying call to Conversa agent)
  same => n,Answer()
- same => n,Playback(connecting-conversa-ai)
- ; Forward audio stream using SIP WebSockets or AGI to your NestJS server
- same => n,AGI(agi://conversa-backend-6bou.onrender.com/voice-gateway)
+ same => n,Set(API_URL=https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound/${tenantId}/${agentId})
+ same => n,AGI(agi://conversa-agi.onrender.com,\${API_URL})
  same => n,Hangup()`}
                 </pre>
               </div>

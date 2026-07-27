@@ -415,13 +415,17 @@ exten => 2000,1,NoOp(Relaying call to Conversa AI Gateway)
  same => n,Hangup()
 ```
 
-#### Method C: Android GSM Gateway (Bridging a local SIM card)
-If you have a spare local SIM card (e.g. MTN, Airtel, Safaricom) and want callers to reach you at standard local cellular rates:
-1.  Insert your spare SIM card into an Android phone.
-2.  Install a GSM-to-SIP gateway application (like **Sim2Sip** or configure a SIP client on **Linphone**).
-3.  Register the gateway app to a SIP extension on your cloud Asterisk PBX (e.g. extension `1001`).
-4.  Configure the gateway app to auto-answer incoming cell calls and forward the audio stream to Asterisk extension `2000` (Conversa AI).
-5.  Ensure all permissions (Microphone, Phone, Display over other apps) are granted in Android Settings.
+#### Method C: Android GSM SIM Gateway (Bridging a local SIM card like MTN)
+If you have a spare local SIM card (e.g. MTN, Airtel, Safaricom, Glo) and want callers to reach you at standard local mobile cellular rates:
+1.  **Insert your SIM card** (e.g. MTN) into any spare Android phone.
+2.  **Install a SIP VoIP application** like **Linphone** or **Sim2Sip** on the phone.
+3.  **Log in to the app** using the Conversa Hosted SIP credentials displayed in your agent's dashboard:
+    *   **SIP Registrar**: `sip.conversa-ai.com`
+    *   **Username**: `conversa_usr_[agentId]`
+    *   **Password**: `conversa_pass_[agentId]`
+4.  **Configure auto-answer settings**: Set the app to auto-answer incoming calls and route them through the active SIP profile.
+5.  **Grant permissions**: In Android settings, ensure the app has permissions for **Microphone**, **Phone call interception**, and **Display over other apps** (to run in the background).
+6.  **Dial and Test**: Call your MTN mobile number from another device. Your Android gateway phone will automatically pick up and bridge the call to the Conversa AI agent!
 *   *Note: iOS does not support GSM-to-SIP bridging due to background call interception limitations.*
 
 ---
