@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Delete, Param, UseGuards, Req } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Body, Delete, Param, UseGuards, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { ApiKeyService } from './api-key.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -10,7 +10,8 @@ export class ApiKeyController {
 
   @Post()
   async create(@Req() req: Request, @Body() data: { name: string }) {
-    return this.apiKeyService.create((req.user as any).id, data.name);
+    if (!data.name?.trim()) throw new BadRequestException('Key name is required.');
+    return this.apiKeyService.create((req.user as any).id, data.name.trim());
   }
 
   @Get()

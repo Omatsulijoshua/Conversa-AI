@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Res, UseGuards, NotFoundException } from '@nestjs/common';
 import { Post, Body } from '@nestjs/common';
 import { TenantAuthGuard } from '../auth/tenant-auth.guard';
 import { Tenant } from '../common/decorators/tenant.decorator';
@@ -13,6 +13,36 @@ export class TrainingController {
     private prisma: PrismaService,
     private knowledge: KnowledgeService,
   ) {}
+
+  @Get('status/:agentId')
+  async status(@Tenant() tenant: any, @Param('agentId') agentId: string) {
+    const agent = await this.prisma.agent.findFirst({
+      where: { id: agentId, tenantId: tenant.id },
+      include: {
+        knowledgeBases: { include: { _count: { select: { chunks: true } } } },
+        _count: { select: { conversations: true } },
+      },
+    });
+    if (!agent) throw new NotFoundException('Agent not found.');
+
+    const knowledgeChunks = agent.knowledgeBases.reduce((total, base) => total + base._count.chunks, 0);
+    const checks = [
+      { id: 'rules', label: 'Business rules and guardrails', complete: Boolean(agent.instructions?.trim() && agent.instructions.length >= 120), href: '/agents' },
+      { id: 'knowledge', label: 'Approved company knowledge', complete: knowledgeChunks > 0, href: '/agents' },
+      { id: 'voice', label: 'Production voice selected', complete: Boolean(agent.voiceId?.trim()), href: '/agents' },
+      { id: 'test', label: 'Test conversation completed', complete: agent._count.conversations > 0, href: '/playground' },
+    ];
+    const completed = checks.filter(check => check.complete).length;
+    return {
+      agent: { id: agent.id, name: agent.name },
+      checks,
+      completed,
+      total: checks.length,
+      score: Math.round((completed / checks.length) * 100),
+      readyForProduction: completed === checks.length,
+      knowledge: { collections: agent.knowledgeBases.length, chunks: knowledgeChunks },
+    };
+  }
 
   @Post('bootstrap')
   async bootstrap(@Tenant() tenant: any, @Body() body?: { businessName?: string }) {
