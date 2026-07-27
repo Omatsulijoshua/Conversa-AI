@@ -14,7 +14,8 @@ import {
   HelpCircle,
   LogOut,
   Menu,
-  X
+  X,
+  GraduationCap
 } from 'lucide-react';
 
 const menuItems = [
@@ -22,6 +23,7 @@ const menuItems = [
   { icon: Terminal, label: 'Playground', href: '/playground' },
   { icon: Key, label: 'API Keys', href: '/api-keys' },
   { icon: UserCircle, label: 'AI Agents', href: '/agents' },
+  { icon: GraduationCap, label: 'Training Center', href: '/training' },
   { icon: Mic2, label: 'Voice Lab', href: '/voice-lab' },
   { icon: BarChart3, label: 'Analytics', href: '/analytics' },
   { icon: Settings, label: 'Settings', href: '/settings' },

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiRequest } from '@/lib/api';
-import { Key, Copy, Trash2, Plus, Shield, Globe, Clock, Check } from 'lucide-react';
+import { Key, Copy, Trash2, Plus, Shield, Globe, Clock, Check, AlertTriangle, Terminal, BookOpen } from 'lucide-react';
 
 export default function ApiKeysPage() {
   const [copied, setCopied] = useState<string | null>(null);
@@ -10,6 +10,7 @@ export default function ApiKeysPage() {
   const [loading, setLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [createdKey, setCreatedKey] = useState<any>(null);
 
   useEffect(() => {
     loadKeys();
@@ -29,10 +30,11 @@ export default function ApiKeysPage() {
   const handleCreate = async () => {
     if (!newKeyName) return;
     try {
-      await apiRequest('/api-keys', {
+      const created = await apiRequest('/api-keys', {
         method: 'POST',
         body: JSON.stringify({ name: newKeyName })
       });
+      setCreatedKey(created);
       setNewKeyName('');
       setShowCreate(false);
       loadKeys();
@@ -102,6 +104,25 @@ export default function ApiKeysPage() {
         </div>
       )}
 
+      {createdKey && (
+        <div className="glass-card p-7 rounded-3xl border border-emerald-500/30 bg-emerald-500/10">
+          <div className="flex items-start gap-4">
+            <AlertTriangle className="w-6 h-6 text-amber-300 shrink-0 mt-1" />
+            <div className="flex-1">
+              <h3 className="text-xl font-bold text-white">Copy this secret key now</h3>
+              <p className="text-sm text-slate-300 mt-1">For your security, the complete key is shown only once. Store it in a server-side secret manager or environment variable.</p>
+              <div className="mt-4 relative">
+                <input readOnly value={createdKey.key} className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-4 pr-14 text-emerald-200 font-mono text-sm" />
+                <button onClick={() => copyToClipboard(createdKey.key)} className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 hover:bg-white/10 rounded-lg" aria-label="Copy secret key">
+                  {copied === createdKey.key ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-white" />}
+                </button>
+              </div>
+              <button onClick={() => setCreatedKey(null)} className="mt-4 text-sm font-bold text-emerald-300 hover:text-white">I have stored this key securely</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-indigo-600/10 border border-indigo-500/20 p-6 rounded-3xl flex items-start gap-4">
         <div className="p-3 bg-indigo-600 rounded-2xl">
           <Shield className="w-6 h-6 text-white" />
@@ -132,7 +153,7 @@ export default function ApiKeysPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Globe className="w-4 h-4" />
-                        Global Access
+                        Server API access
                       </span>
                     </div>
                   </div>
@@ -143,14 +164,14 @@ export default function ApiKeysPage() {
                     <input 
                       type="text" 
                       readOnly 
-                      value={item.key} 
+                      value={item.keyPreview || 'cv_••••••••••••'} 
                       className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-slate-300 font-mono text-sm focus:outline-none focus:border-indigo-500"
                     />
                     <button 
-                      onClick={() => copyToClipboard(item.key)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-lg transition-all"
+                      disabled
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg opacity-40 cursor-not-allowed"
                     >
-                      {copied === item.key ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5 text-slate-500 group-hover/key:text-white" />}
+                      <Shield className="w-5 h-5 text-slate-500" />
                     </button>
                   </div>
                 </div>
@@ -174,6 +195,31 @@ export default function ApiKeysPage() {
             No API keys found. Create one to get started.
           </div>
         )}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="glass-card p-7 rounded-3xl border border-white/10 bg-white/5">
+          <div className="flex items-center gap-3 mb-5"><Terminal className="w-6 h-6 text-indigo-300" /><h2 className="text-xl font-bold text-white">Developer quick start</h2></div>
+          <ol className="space-y-3 text-sm text-slate-300 mb-5">
+            <li><strong className="text-white">1.</strong> Generate a key and save it as <code className="text-indigo-300">CONVERSA_API_KEY</code> on your server.</li>
+            <li><strong className="text-white">2.</strong> Copy the trained agent ID from the Agents page.</li>
+            <li><strong className="text-white">3.</strong> Start a session, then send customer messages using its session ID.</li>
+          </ol>
+          <pre className="overflow-x-auto rounded-2xl bg-black/50 border border-white/10 p-5 text-xs text-slate-300 leading-relaxed"><code>{`curl -X POST "$CONVERSA_API_URL/conversation/start" \\
+  -H "x-api-key: $CONVERSA_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"agentId":"YOUR_AGENT_ID"}'`}</code></pre>
+        </div>
+        <div className="glass-card p-7 rounded-3xl border border-white/10 bg-white/5">
+          <div className="flex items-center gap-3 mb-5"><BookOpen className="w-6 h-6 text-cyan-300" /><h2 className="text-xl font-bold text-white">Use the API safely</h2></div>
+          <ul className="space-y-3 text-sm text-slate-300">
+            <li>Keep keys on your backend—never in browser or mobile application code.</li>
+            <li>Use separate keys for development, staging, and production.</li>
+            <li>Revoke a key immediately if it appears in logs, screenshots, or source control.</li>
+            <li>Pass credentials in the <code className="text-cyan-300">x-api-key</code> header over HTTPS.</li>
+            <li>Review “last used” dates and remove unused credentials.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

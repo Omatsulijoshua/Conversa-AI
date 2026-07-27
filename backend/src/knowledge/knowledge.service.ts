@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { AiProviderService } from '../ai-provider/ai-provider.service';
+import { PDFParse } from 'pdf-parse';
 
 @Injectable()
 export class KnowledgeService {
@@ -11,27 +12,100 @@ export class KnowledgeService {
     private aiProviders: AiProviderService,
   ) {}
 
+  async createBase(tenantId: string, agentId: string, name: string) {
+    const agent = await this.prisma.agent.findFirst({ where: { id: agentId, tenantId } });
+    if (!agent) throw new NotFoundException('Agent not found.');
+    return this.prisma.knowledgeBase.create({ data: { name, agentId, tenantId } });
+  }
+
+  async getBases(tenantId: string, agentId: string) {
+    return this.prisma.knowledgeBase.findMany({
+      where: { agentId, tenantId },
+      include: {
+        _count: { select: { chunks: true } },
+        chunks: { select: { metadata: true, createdAt: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    }).then((bases) => bases.map((base) => {
+      const sources = new Map<string, { filename: string; type?: string; uploadedAt: Date }>();
+      for (const chunk of base.chunks) {
+        const metadata = chunk.metadata as any;
+        const filename = metadata?.filename;
+        if (filename && !sources.has(filename)) {
+          sources.set(filename, { filename, type: metadata?.mimeType, uploadedAt: chunk.createdAt });
+        }
+      }
+      const { chunks, ...result } = base;
+      return { ...result, sources: [...sources.values()] };
+    }));
+  }
+
+  async ingestFile(tenantId: string, knowledgeBaseId: string, file: any) {
+    const knowledgeBase = await this.prisma.knowledgeBase.findFirst({
+      where: { id: knowledgeBaseId, tenantId },
+    });
+    if (!knowledgeBase) throw new NotFoundException('Knowledge base not found.');
+    if (file.size > 10 * 1024 * 1024) throw new BadRequestException('Files must be 10 MB or smaller.');
+
+    const allowed = new Set(['text/plain', 'text/markdown', 'text/csv', 'application/json', 'application/pdf']);
+    if (!allowed.has(file.mimetype)) {
+      throw new BadRequestException('Supported files: PDF, TXT, Markdown, CSV, and JSON.');
+    }
+
+    let content = '';
+    if (file.mimetype === 'application/pdf') {
+      const parser = new PDFParse({ data: file.buffer });
+      try {
+        content = (await parser.getText()).text;
+      } finally {
+        await parser.destroy();
+      }
+    } else {
+      content = file.buffer.toString('utf-8');
+    }
+    if (!content.trim()) throw new BadRequestException('No readable text was found in this file.');
+
+    await this.prisma.documentChunk.deleteMany({
+      where: { knowledgeBaseId, metadata: { path: ['filename'], equals: file.originalname } },
+    });
+    const chunksCreated = await this.ingestText(knowledgeBaseId, content, {
+      filename: file.originalname,
+      mimeType: file.mimetype,
+      size: file.size,
+    });
+    return { success: true, filename: file.originalname, chunksCreated };
+  }
+
+  async deleteBase(tenantId: string, id: string) {
+    const knowledgeBase = await this.prisma.knowledgeBase.findFirst({ where: { id, tenantId } });
+    if (!knowledgeBase) throw new NotFoundException('Knowledge base not found.');
+    await this.prisma.$transaction([
+      this.prisma.documentChunk.deleteMany({ where: { knowledgeBaseId: id } }),
+      this.prisma.knowledgeBase.delete({ where: { id } }),
+    ]);
+    return { success: true };
+  }
+
   async ingestText(knowledgeBaseId: string, content: string, metadata: any = {}) {
-    // 1. Chunk the text (simple chunking for now)
-    const chunks = this.chunkText(content, 1000);
+    const chunks = this.chunkText(content, 1200, 180);
     const knowledgeBase = await this.prisma.knowledgeBase.findUnique({
       where: { id: knowledgeBaseId },
       select: { tenantId: true },
     });
 
-    for (const chunk of chunks) {
+    for (const [index, chunk] of chunks.entries()) {
       const embedding = await this.embed(chunk, knowledgeBase?.tenantId);
-
-      // 3. Save to DB
       await this.prisma.documentChunk.create({
         data: {
           knowledgeBaseId,
           content: chunk,
-          metadata,
+          metadata: { ...metadata, chunkIndex: index, chunkCount: chunks.length },
           embedding,
         },
       });
     }
+    await this.prisma.knowledgeBase.update({ where: { id: knowledgeBaseId }, data: { updatedAt: new Date() } });
+    return chunks.length;
   }
 
   async query(agentId: string, question: string, topK = 3) {
@@ -63,10 +137,22 @@ export class KnowledgeService {
       .slice(0, topK);
   }
 
-  private chunkText(text: string, size: number): string[] {
-    const chunks = [];
-    for (let i = 0; i < text.length; i += size) {
-      chunks.push(text.slice(i, i + size));
+  private chunkText(text: string, size: number, overlap: number): string[] {
+    const clean = text.replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+    const chunks: string[] = [];
+    let start = 0;
+    while (start < clean.length) {
+      let end = Math.min(start + size, clean.length);
+      if (end < clean.length) {
+        const paragraphBreak = clean.lastIndexOf('\n\n', end);
+        const sentenceBreak = clean.lastIndexOf('. ', end);
+        const naturalBreak = Math.max(paragraphBreak, sentenceBreak);
+        if (naturalBreak > start + size * 0.6) end = naturalBreak + 1;
+      }
+      const chunk = clean.slice(start, end).trim();
+      if (chunk) chunks.push(chunk);
+      if (end >= clean.length) break;
+      start = Math.max(start + 1, end - overlap);
     }
     return chunks;
   }

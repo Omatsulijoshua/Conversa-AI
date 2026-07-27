@@ -1,24 +1,30 @@
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, Body, Req } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, UseGuards, UseInterceptors, UploadedFile, Body } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { VoiceService } from './voice.service';
-import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('voice')
 @UseGuards(AuthGuard('jwt'))
 export class VoiceController {
-  constructor(
-    private readonly voiceService: VoiceService,
-    private prisma: PrismaService,
-  ) {}
+  constructor(private readonly voiceService: VoiceService) {}
+
+  @Get()
+  async listVoices() {
+    return this.voiceService.listVoices();
+  }
 
   @Post('clone')
   @UseInterceptors(FileInterceptor('file'))
   async cloneVoice(
     @UploadedFile() file: any,
     @Body('name') name: string,
-    @Req() req: any,
   ) {
+    if (!file?.buffer) {
+      throw new BadRequestException('Please upload or record a voice sample.');
+    }
+    if (!name?.trim()) {
+      throw new BadRequestException('Please give the voice a name.');
+    }
     const result = await this.voiceService.cloneVoice(file.buffer, name);
     
     // You could also save this voiceId to the tenant or a new table for cloned voices
