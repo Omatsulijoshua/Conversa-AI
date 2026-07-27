@@ -1,23 +1,33 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { apiRequest } from '@/lib/api';
 import { 
   UserCircle, 
   Plus, 
   Settings2, 
   BrainCircuit, 
-  Trash2,
-  Search,
-  X,
-  BookOpen,
-  Upload,
-  FileText,
-  Loader2,
-  CheckCircle2,
-  ClipboardList,
-  Save,
-  Code2
+  Trash2, 
+  Search, 
+  X, 
+  BookOpen, 
+  Upload, 
+  FileText, 
+  Loader2, 
+  CheckCircle2, 
+  ClipboardList, 
+  Save, 
+  Code2,
+  Phone,
+  Globe,
+  Cpu,
+  Smartphone,
+  Share2,
+  Check,
+  Copy,
+  AlertCircle,
+  MessageSquare
 } from 'lucide-react';
 
 const KnowledgeModal = ({ agent, onClose }: { agent: any, onClose: () => void }) => {
@@ -64,7 +74,6 @@ const KnowledgeModal = ({ agent, onClose }: { agent: any, onClose: () => void })
     formData.append('file', file);
 
     try {
-      // Note: apiRequest needs to handle FormData or we use fetch directly
       const token = localStorage.getItem('conversa_token');
       await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://conversa-backend-6bou.onrender.com/api/v1'}/knowledge/${kbId}/upload`, {
         method: 'POST',
@@ -208,7 +217,7 @@ const BusinessRulesModal = ({ agent, onClose, onSaved }: { agent: any, onClose: 
     `Never Say or Ask: ${rules.neverSay}`,
     `Call Closing: ${rules.closing}`,
     'Use these rules on every conversation. If the customer asks something outside these rules, be honest, collect the right details, and escalate to a human.',
-	  ].join('\n\n');
+  ].join('\n\n');
 
   const buildDefaultInstructions = (tone: string) => [
     'Business Rules for Customer Calls',
@@ -248,87 +257,87 @@ const BusinessRulesModal = ({ agent, onClose, onSaved }: { agent: any, onClose: 
             <div className="p-3 bg-indigo-600 rounded-2xl">
               <ClipboardList className="w-6 h-6 text-white" />
             </div>
-	            <div>
-	              <h3 className="text-2xl font-bold text-white">{agent.name} Business Rules</h3>
-	              <p className="text-slate-400 text-sm">Plain-language rules for business users, with a developer option for advanced training.</p>
-	            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white">{agent.name} Business Rules</h3>
+              <p className="text-slate-400 text-sm">Plain-language rules for business users, with a developer option for advanced training.</p>
+            </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all">
             <X className="w-6 h-6 text-slate-400" />
           </button>
         </div>
 
-	        <div className="flex gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-2xl w-fit">
-	          <button
-	            type="button"
-	            onClick={() => setMode('basic')}
-	            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${mode === 'basic' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
-	          >
-	            <ClipboardList className="w-4 h-4" />
-	            Simple Rules
-	          </button>
-	          <button
-	            type="button"
-	            onClick={() => setMode('developer')}
-	            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${mode === 'developer' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
-	          >
-	            <Code2 className="w-4 h-4" />
-	            Developer
-	          </button>
-	        </div>
+        <div className="flex gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-2xl w-fit">
+          <button
+            type="button"
+            onClick={() => setMode('basic')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${mode === 'basic' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+          >
+            <ClipboardList className="w-4 h-4" />
+            Simple Rules
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('developer')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${mode === 'developer' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+          >
+            <Code2 className="w-4 h-4" />
+            Developer
+          </button>
+        </div>
 
-	        {mode === 'basic' ? (
-	          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-	            <RuleField label="How should calls start?" value={rules.greeting} onChange={(value) => updateRule('greeting', value)} />
-	            <RuleField label="What should the agent sound like?" value={rules.tone} onChange={(value) => updateRule('tone', value)} />
-	            <RuleField label="What is the main job?" value={rules.goal} onChange={(value) => updateRule('goal', value)} large />
-	            <RuleField label="Business hours" value={rules.businessHours} onChange={(value) => updateRule('businessHours', value)} />
-	            <RuleField label="Refund or return rules" value={rules.refundPolicy} onChange={(value) => updateRule('refundPolicy', value)} large />
-	            <RuleField label="When should it send to a human?" value={rules.escalationRules} onChange={(value) => updateRule('escalationRules', value)} large />
-	            <RuleField label="What customer details should it collect?" value={rules.collectInfo} onChange={(value) => updateRule('collectInfo', value)} large />
-	            <RuleField label="What must it never ask or say?" value={rules.neverSay} onChange={(value) => updateRule('neverSay', value)} large />
-	            <RuleField label="How should calls end?" value={rules.closing} onChange={(value) => updateRule('closing', value)} large />
-	          </div>
-	        ) : (
-	          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-	            <label className="lg:col-span-2 space-y-2">
-	              <span className="text-sm font-bold text-slate-400">System instructions / prompt</span>
-	              <textarea
-	                value={developerInstructions}
-	                onChange={(e) => setDeveloperInstructions(e.target.value)}
-	                rows={16}
-	                className="w-full resize-none font-mono text-sm bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
-	              />
-	            </label>
-	            <div className="space-y-5">
-	              <label className="space-y-2 block">
-	                <span className="text-sm font-bold text-slate-400">Developer JSON notes</span>
-	                <textarea
-	                  value={developerNotes}
-	                  onChange={(e) => setDeveloperNotes(e.target.value)}
-	                  rows={10}
-	                  className="w-full resize-none font-mono text-sm bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
-	                />
-	              </label>
-	              <div className="p-4 rounded-2xl bg-indigo-600/10 border border-indigo-500/20">
-	                <h4 className="text-white font-bold mb-2">Developer examples</h4>
-	                <ul className="space-y-2 text-sm text-slate-300">
-	                  <li>Return JSON for CRM handoff summaries.</li>
-	                  <li>Call a webhook when intent is appointment booking.</li>
-	                  <li>Escalate if confidence is low or sentiment is negative.</li>
-	                  <li>Write exact test cases before live phone routing.</li>
-	                </ul>
-	              </div>
-	            </div>
-	          </div>
-	        )}
+        {mode === 'basic' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <RuleField label="How should calls start?" value={rules.greeting} onChange={(value) => updateRule('greeting', value)} />
+            <RuleField label="What should the agent sound like?" value={rules.tone} onChange={(value) => updateRule('tone', value)} />
+            <RuleField label="What is the main job?" value={rules.goal} onChange={(value) => updateRule('goal', value)} large />
+            <RuleField label="Business hours" value={rules.businessHours} onChange={(value) => updateRule('businessHours', value)} />
+            <RuleField label="Refund or return rules" value={rules.refundPolicy} onChange={(value) => updateRule('refundPolicy', value)} large />
+            <RuleField label="When should it send to a human?" value={rules.escalationRules} onChange={(value) => updateRule('escalationRules', value)} large />
+            <RuleField label="What customer details should it collect?" value={rules.collectInfo} onChange={(value) => updateRule('collectInfo', value)} large />
+            <RuleField label="What must it never ask or say?" value={rules.neverSay} onChange={(value) => updateRule('neverSay', value)} large />
+            <RuleField label="How should calls end?" value={rules.closing} onChange={(value) => updateRule('closing', value)} large />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <label className="lg:col-span-2 space-y-2">
+              <span className="text-sm font-bold text-slate-400">System instructions / prompt</span>
+              <textarea
+                value={developerInstructions}
+                onChange={(e) => setDeveloperInstructions(e.target.value)}
+                rows={16}
+                className="w-full resize-none font-mono text-sm bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
+              />
+            </label>
+            <div className="space-y-5">
+              <label className="space-y-2 block">
+                <span className="text-sm font-bold text-slate-400">Developer JSON notes</span>
+                <textarea
+                  value={developerNotes}
+                  onChange={(e) => setDeveloperNotes(e.target.value)}
+                  rows={10}
+                  className="w-full resize-none font-mono text-sm bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
+                />
+              </label>
+              <div className="p-4 rounded-2xl bg-indigo-600/10 border border-indigo-500/20">
+                <h4 className="text-white font-bold mb-2">Developer examples</h4>
+                <ul className="space-y-2 text-sm text-slate-300">
+                  <li>Return JSON for CRM handoff summaries.</li>
+                  <li>Call a webhook when intent is appointment booking.</li>
+                  <li>Escalate if confidence is low or sentiment is negative.</li>
+                  <li>Write exact test cases before live phone routing.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-8 flex flex-col md:flex-row md:items-center gap-4 justify-between border-t border-white/5 pt-6">
           <p className="text-sm text-slate-500">
             These rules are saved into the agent instructions and used during every test conversation.
           </p>
           <div className="flex items-center gap-3">
-	            {saved && <span className="flex items-center gap-2 text-sm text-emerald-400"><CheckCircle2 className="w-4 h-4" /> Saved</span>}
+            {saved && <span className="flex items-center gap-2 text-sm text-emerald-400"><CheckCircle2 className="w-4 h-4" /> Saved</span>}
             <button
               onClick={saveRules}
               disabled={saving}
@@ -356,13 +365,364 @@ const RuleField = ({ label, value, onChange, large }: { label: string, value: st
   </label>
 );
 
+const ConnectModal = ({ agent, onClose, defaultTab = 'webrtc' }: { agent: any, onClose: () => void, defaultTab?: string }) => {
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [copied, setCopied] = useState(false);
+
+  const webhookUrl = `https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound/${agent.tenantId}/${agent.id}`;
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const tabs = [
+    { id: 'webrtc', label: 'WebRTC (Internet Call)', icon: Globe },
+    { id: 'twilio', label: 'Twilio Voice', icon: Phone },
+    { id: 'telnyx', label: 'Telnyx Voice (Free)', icon: Phone },
+    { id: 'sip', label: 'SIP PBX (Asterisk)', icon: Cpu },
+    { id: 'gsm', label: 'GSM Android SIM', icon: Smartphone },
+    { id: 'social', label: 'Social & Meetings', icon: Share2 },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+      <div className="glass-card w-full max-w-5xl max-h-[90vh] overflow-y-auto p-8 rounded-[2rem] border border-white/10 bg-slate-950 shadow-2xl relative">
+        
+        {/* Header */}
+        <div className="flex justify-between items-start mb-6 relative z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-indigo-600 rounded-2xl">
+              <Phone className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white">Connect {agent.name}</h3>
+              <p className="text-slate-400 text-sm">Choose a calling channel and follow the setup instructions to connect your agent.</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all">
+            <X className="w-6 h-6 text-slate-400" />
+          </button>
+        </div>
+
+        {/* Layout: Sidebar tabs and Main content */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative z-10">
+          
+          {/* Tabs column */}
+          <div className="md:col-span-1 space-y-2">
+            {tabs.map((tab) => {
+              const TabIcon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-left border ${
+                    activeTab === tab.id
+                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/20'
+                      : 'text-slate-400 hover:text-white bg-white/5 border-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  <TabIcon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Content column */}
+          <div className="md:col-span-3 bg-white/5 border border-white/5 rounded-3xl p-6 md:p-8 overflow-y-auto max-h-[60vh] scrollbar-hide">
+            
+            {activeTab === 'webrtc' && (
+              <div className="space-y-6">
+                <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-indigo-400" />
+                  WebRTC In-App Calling (Zero Carrier Fees)
+                </h4>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Enable users to call your AI agent directly from your website or mobile application using their microphone and browser data. This option requires no phone numbers and is 100% free of carrier connection fees.
+                </p>
+                
+                <div className="p-5 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl space-y-2">
+                  <h5 className="font-bold text-white text-sm flex items-center gap-2">
+                    <BrainCircuit className="w-4 h-4 text-indigo-400 animate-pulse" />
+                    Quick Playground Test
+                  </h5>
+                  <p className="text-slate-300 text-xs leading-relaxed">
+                    You can test this agent's voice live right now using the **Playground** inside your Client Portal. Go to the Playground in the sidebar, select **{agent.name}** and start talking!
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <h5 className="font-bold text-white text-sm">Developer Client Embed Script</h5>
+                  <p className="text-slate-400 text-xs">Install our WebRTC SDK and paste this snippet into your frontend application to start internet calling:</p>
+                  <div className="relative">
+                    <pre className="p-4 bg-black/60 border border-white/10 rounded-2xl font-mono text-xs text-indigo-300 overflow-x-auto whitespace-pre-wrap">
+{`import { ConversaRTC } from '@conversa/rtc-client';
+
+const call = new ConversaRTC({
+  backendUrl: 'https://conversa-backend-6bou.onrender.com',
+  agentId: '${agent.id}'
+});
+
+// Start call session
+call.start();
+
+// Stop call session
+call.stop();`}
+                    </pre>
+                    <button 
+                      onClick={() => copyToClipboard(`import { ConversaRTC } from '@conversa/rtc-client';\n\nconst call = new ConversaRTC({\n  backendUrl: 'https://conversa-backend-6bou.onrender.com',\n  agentId: '${agent.id}'\n});\n\ncall.start();`)}
+                      className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-all"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'twilio' && (
+              <div className="space-y-6">
+                <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-indigo-400" />
+                  Twilio Voice Integration
+                </h4>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Connect a standard 10-digit virtual phone number from Twilio. When a customer dials your number, Twilio queries your Conversa agent webhook to initiate a real-time conversational voice call.
+                </p>
+
+                <div className="space-y-4">
+                  <h5 className="font-bold text-white text-sm">Setup Instructions:</h5>
+                  <ol className="list-decimal list-inside text-slate-300 text-xs space-y-3">
+                    <li>Log in to your **Twilio Console** and buy a phone number.</li>
+                    <li>Go to **Phone Numbers** &rarr; **Manage** &rarr; **Active Numbers** and select your number.</li>
+                    <li>Scroll down to **Voice & Fax**. Under **A CALL COMES IN**, select **Webhook**.</li>
+                    <li>Set the HTTP request type to **POST**.</li>
+                    <li>Copy and paste your pre-populated webhook URL below:</li>
+                  </ol>
+
+                  <div className="flex gap-2 items-center bg-black/60 border border-white/10 rounded-2xl p-4 mt-2">
+                    <span className="font-mono text-xs text-indigo-300 break-all select-all flex-1">{webhookUrl}</span>
+                    <button 
+                      onClick={() => copyToClipboard(webhookUrl)}
+                      className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-all flex-shrink-0"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'telnyx' && (
+              <div className="space-y-6">
+                <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-indigo-400" />
+                  Telnyx Integration (Free $10 Developer Credits)
+                </h4>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Telnyx offers wholesale carrier rates and awards new developer accounts with a **free $10 trial credit** (no credit card required), which is perfect for claiming a free number and testing inbound/outbound calls.
+                </p>
+
+                <div className="space-y-4">
+                  <h5 className="font-bold text-white text-sm">Setup Instructions:</h5>
+                  <div className="grid grid-cols-1 gap-4 text-xs text-slate-300">
+                    <div className="flex gap-3 items-start p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <span className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0">1</span>
+                      <div>
+                        <p className="font-bold text-white mb-0.5">Register for Trial Credits</p>
+                        <p className="text-slate-400">Go to [Telnyx](https://telnyx.com/) and register. Your account will automatically credit with $10 in trial balance.</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 items-start p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <span className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0">2</span>
+                      <div>
+                        <p className="font-bold text-white mb-0.5">Buy a Phone Number</p>
+                        <p className="text-slate-400">Navigate to **Numbers** &rarr; **Search & Buy**. Purchase a number using your trial balance (costs about $1/month).</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 items-start p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <span className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0">3</span>
+                      <div>
+                        <p className="font-bold text-white mb-0.5">Create a TeXML Application</p>
+                        <p className="text-slate-400">Go to **Voice & Fax** &rarr; **TeXML**, click **Create TeXML Application**, and set the Webhook URL (POST) to:</p>
+                        <div className="flex gap-2 items-center bg-black/60 border border-white/10 rounded-xl p-3 mt-2">
+                          <span className="font-mono text-[10px] text-indigo-300 break-all select-all flex-1">{webhookUrl}</span>
+                          <button 
+                            onClick={() => copyToClipboard(webhookUrl)}
+                            className="p-1.5 bg-white/5 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-all flex-shrink-0"
+                          >
+                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 items-start p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <span className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center font-bold text-white text-xs flex-shrink-0">4</span>
+                      <div>
+                        <p className="font-bold text-white mb-0.5">Link Number to TeXML App</p>
+                        <p className="text-slate-400">Go to **Numbers** &rarr; **My Numbers**, configure your purchased number, set connection type to **TeXML Application**, and select your app.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'sip' && (
+              <div className="space-y-6">
+                <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Cpu className="w-5 h-5 text-indigo-400" />
+                  Self-Hosted SIP PBX (Asterisk / FreePBX)
+                </h4>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Run your own open-source telephone exchange to connect direct office phone systems, local VoIP networks, or wholesale carriers (like Verizon, MTN Business, SIP Trunks) to Conversa.
+                </p>
+
+                <div className="p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl space-y-1.5">
+                  <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-indigo-400" />
+                    SIP-to-SIP Testing (100% Free)
+                  </h5>
+                  <p className="text-slate-300 text-[11px] leading-relaxed">
+                    To test dialing over SIP for free, sign up for a virtual SIP address at [SIP2SIP](https://sip2sip.info/), download the free **Linphone** or **Zoiper** softphone app on your computer/phone, log in, and call your SIP extensions over Wi-Fi.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <h5 className="font-bold text-white text-sm">Asterisk Dialplan Configuration</h5>
+                  <p className="text-slate-400 text-xs">Configure your self-hosted Asterisk PBX dialplan (`/etc/asterisk/extensions.conf`) to bridge incoming SIP calls (Extension `2000`) to this agent:</p>
+                  <div className="relative">
+                    <pre className="p-4 bg-black/60 border border-white/10 rounded-2xl font-mono text-xs text-indigo-300 overflow-x-auto whitespace-pre-wrap">
+{`[conversa-inbound]
+exten => 2000,1,NoOp(Forwarding to Conversa AI ${agent.name})
+same => n,Set(API_URL=${webhookUrl})
+same => n,AGI(agi://conversa-agi.onrender.com,\${API_URL})
+same => n,Hangup()`}
+                    </pre>
+                    <button 
+                      onClick={() => copyToClipboard(`[conversa-inbound]\exten => 2000,1,NoOp(Forwarding to Conversa AI ${agent.name})\nsame => n,Set(API_URL=${webhookUrl})\nsame => n,AGI(agi://conversa-agi.onrender.com,\${API_URL})\nsame => n,Hangup()`)}
+                      className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-all"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'gsm' && (
+              <div className="space-y-6">
+                <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-indigo-400" />
+                  GSM Android SIM Gateway (Self-Owned Hardware)
+                </h4>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  If you want absolute carrier independence with zero cloud trunk subscription fees, you can turn a spare Android phone with a local cellular SIM card (MTN, Airtel, Safaricom, Safelink, etc.) into a physical voice gateway.
+                </p>
+
+                <div className="flex gap-2.5 items-start p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                  <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-amber-400 text-xs leading-relaxed font-semibold">
+                    Note: Due to Apple's strict background audio restrictions, this cellular-to-SIP bridge option is only possible on Android devices.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <h5 className="font-bold text-white text-sm">GSM-to-Cloud Bridge Setup Guide:</h5>
+                  <div className="grid grid-cols-1 gap-4 text-xs text-slate-300">
+                    <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <p className="font-bold text-white mb-1">1. Set up a Local SIP Account</p>
+                      <p className="text-slate-400">Spin up a local PBX (like Asterisk/FreePBX) in a cloud container. Register a SIP Extension (e.g. extension `1001`) with a secure password.</p>
+                    </div>
+
+                    <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <p className="font-bold text-white mb-1">2. Download a GSM-to-SIP Application</p>
+                      <p className="text-slate-400">Install a VoIP gateway client (such as **Linphone** or a specialized APK like **Sim2Sip**) on your Android phone containing the SIM card. Register the app to your cloud Asterisk server using extension `1001` credentials.</p>
+                    </div>
+
+                    <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <p className="font-bold text-white mb-1">3. Grant System Permissions</p>
+                      <p className="text-slate-400">Go to Android settings and allow the app **Microphone** access (to capture caller voice), **Phone** access (to intercept calls), and **Display Over Other Apps** (to allow bridging in the background).</p>
+                    </div>
+
+                    <div className="p-4 bg-white/2 border border-white/5 rounded-2xl">
+                      <p className="font-bold text-white mb-1">4. Configure Auto-Answer & Routing</p>
+                      <p className="text-slate-400">Configure the gateway app to auto-answer incoming cell calls and forward the SIP stream to extension `2000` (your Conversa webhook). Callers dial your regular SIM mobile number, and are answered by Conversa AI!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'social' && (
+              <div className="space-y-6">
+                <h4 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-indigo-400" />
+                  Social Messaging & Live Meeting Integrations
+                </h4>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Bridge your Conversa AI agent to already calling internet channels and messaging networks.
+                </p>
+
+                <div className="grid grid-cols-1 gap-6 text-xs text-slate-300">
+                  <div className="p-6 bg-white/2 border border-white/5 rounded-3xl space-y-2 hover:bg-white/5 transition-all">
+                    <div className="flex items-center gap-2 mb-1">
+                      <MessageSquare className="w-5 h-5 text-indigo-400" />
+                      <h5 className="font-bold text-white text-sm">WhatsApp & SMS Text Chats</h5>
+                    </div>
+                    <p className="text-slate-400">
+                      Configure your WhatsApp Business Cloud API webhook or Twilio programmable SMS callback to send message payloads to:
+                    </p>
+                    <pre className="p-3 bg-black/60 border border-white/5 rounded-xl font-mono text-indigo-300 text-[10px] select-all">
+                      https://conversa-backend-6bou.onrender.com/api/v1/webhook/whatsapp
+                    </pre>
+                  </div>
+
+                  <div className="p-6 bg-white/2 border border-white/5 rounded-3xl space-y-2 hover:bg-white/5 transition-all">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Code2 className="w-5 h-5 text-indigo-400" />
+                      <h5 className="font-bold text-white text-sm">Discord Voice Channels</h5>
+                    </div>
+                    <p className="text-slate-400">
+                      Run a local Node.js Discord voice bot handler using the Discord.js library. Connect your bot to a server channel, collect user audio streams using the WebRTC channel, feed them to Conversa's audio endpoints, and play back the resulting voice response.
+                    </p>
+                  </div>
+
+                  <div className="p-6 bg-white/2 border border-white/5 rounded-3xl space-y-2 hover:bg-white/5 transition-all">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Globe className="w-5 h-5 text-indigo-400" />
+                      <h5 className="font-bold text-white text-sm">Zoom & Google Meet</h5>
+                    </div>
+                    <p className="text-slate-400">
+                      Establish a SIP-to-RTMP or WebRTC meeting room bridge. Your PBX/Asterisk server dials into the meeting room as a participant, streaming the participant audio stream to the Conversa API and broadcasting the AI voice agent response back into the meeting room.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 export default function AgentsPage() {
   const [agents, setAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAgentKb, setSelectedAgentKb] = useState<any>(null);
   const [selectedAgentRules, setSelectedAgentRules] = useState<any>(null);
-  const [newAgent, setNewAgent] = useState({ name: '', type: 'Support', voice: 'Amy' });
+  const [selectedAgentConnect, setSelectedAgentConnect] = useState<any>(null);
+  const [newAgent, setNewAgent] = useState({ name: '', type: 'Support', voice: 'Amy', integration: 'webrtc' });
 
   useEffect(() => {
     loadAgents();
@@ -382,12 +742,17 @@ export default function AgentsPage() {
   const handleCreate = async () => {
     if (!newAgent.name) return;
     try {
-      await apiRequest('/agent/create', {
+      const created = await apiRequest('/agent/create', {
         method: 'POST',
-        body: JSON.stringify(newAgent)
+        body: JSON.stringify({
+          name: newAgent.name,
+          type: newAgent.type,
+          voice: newAgent.voice
+        })
       });
       setShowCreateModal(false);
-      setNewAgent({ name: '', type: 'Support', voice: 'Amy' });
+      setSelectedAgentConnect({ ...created, defaultTab: newAgent.integration });
+      setNewAgent({ name: '', type: 'Support', voice: 'Amy', integration: 'webrtc' });
       loadAgents();
     } catch (err) {
       alert('Failed to create agent');
@@ -472,6 +837,21 @@ export default function AgentsPage() {
                   <option>Sophia</option>
                 </select>
               </div>
+              <div>
+                <label className="text-sm text-slate-400 mb-1 block font-medium">Calling Connection Method</label>
+                <select 
+                  value={newAgent.integration}
+                  onChange={(e) => setNewAgent({...newAgent, integration: e.target.value})}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
+                >
+                  <option value="webrtc">WebRTC In-App Calling (Free)</option>
+                  <option value="twilio">Twilio Programmable Voice</option>
+                  <option value="telnyx">Telnyx TeXML Application (Free Credits)</option>
+                  <option value="sip">Self-Hosted SIP PBX (Asterisk)</option>
+                  <option value="gsm">Android GSM SIM Card Gateway</option>
+                  <option value="social">Social Apps (Discord/Zoom/Meet)</option>
+                </select>
+              </div>
               <button 
                 onClick={handleCreate}
                 className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition-all mt-4"
@@ -492,6 +872,14 @@ export default function AgentsPage() {
           agent={selectedAgentRules}
           onClose={() => setSelectedAgentRules(null)}
           onSaved={loadAgents}
+        />
+      )}
+
+      {selectedAgentConnect && (
+        <ConnectModal 
+          agent={selectedAgentConnect} 
+          defaultTab={selectedAgentConnect.defaultTab || 'webrtc'}
+          onClose={() => setSelectedAgentConnect(null)} 
         />
       )}
 
@@ -530,23 +918,30 @@ export default function AgentsPage() {
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => setSelectedAgentKb(agent)}
-                    className="flex-1 py-3 bg-white/5 border border-white/5 text-white rounded-xl text-sm font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                    className="p-2.5 bg-white/5 border border-white/5 text-white rounded-xl text-xs font-bold hover:bg-white/10 transition-all flex-1 flex items-center justify-center gap-1.5"
                   >
-                    <BookOpen className="w-4 h-4" />
+                    <BookOpen className="w-3.5 h-3.5" />
                     Knowledge
                   </button>
                   <button
                     onClick={() => setSelectedAgentRules(agent)}
-                    className="flex-1 py-3 bg-indigo-600/15 border border-indigo-500/20 text-indigo-200 rounded-xl text-sm font-bold hover:bg-indigo-600/25 transition-all flex items-center justify-center gap-2"
+                    className="p-2.5 bg-indigo-600/15 border border-indigo-500/20 text-indigo-200 rounded-xl text-xs font-bold hover:bg-indigo-600/25 transition-all flex-1 flex items-center justify-center gap-1.5"
                   >
-                    <ClipboardList className="w-4 h-4" />
+                    <ClipboardList className="w-3.5 h-3.5" />
                     Rules
+                  </button>
+                  <button
+                    onClick={() => setSelectedAgentConnect(agent)}
+                    className="p-2.5 bg-emerald-600/15 border border-emerald-500/20 text-emerald-200 rounded-xl text-xs font-bold hover:bg-emerald-600/25 transition-all flex-1 flex items-center justify-center gap-1.5"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    Connect
                   </button>
                   <button 
                     onClick={() => handleDelete(agent.id)}
-                    className="p-3 bg-red-400/5 text-red-400 hover:bg-red-400/10 rounded-xl transition-all border border-red-400/10"
+                    className="p-2.5 bg-red-400/5 text-red-400 hover:bg-red-400/10 rounded-xl transition-all border border-red-400/10"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -571,9 +966,9 @@ export default function AgentsPage() {
               Connect your agents to external tools via Webhooks. Enable them to check inventory, book meetings, or process payments automatically.
             </p>
           </div>
-          <button className="md:ml-auto px-8 py-4 bg-white text-indigo-600 rounded-2xl font-bold hover:bg-indigo-50 transition-all active:scale-95 shadow-2xl">
+          <Link href="/docs" className="md:ml-auto px-8 py-4 bg-white text-indigo-600 rounded-2xl font-bold hover:bg-indigo-50 transition-all active:scale-95 shadow-2xl text-center">
             Explore Documentation
-          </button>
+          </Link>
         </div>
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-white/10 transition-all duration-700" />
       </div>

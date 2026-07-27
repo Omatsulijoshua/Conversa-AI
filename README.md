@@ -347,11 +347,20 @@ curl -X POST https://conversa-backend-6bou.onrender.com/api/v1/conversation/mess
 ### 2. 📞 Twilio Voice, SMS, and WhatsApp Setup
 Integrate Conversa AI directly with your Twilio account to handle incoming phone calls, SMS, or WhatsApp threads.
 
-*   **Voice (Inbound Calls)**: Under active phone number settings, configure the voice handler to webhook **HTTP POST**:
+#### Twilio Voice Setup (Step-by-Step)
+1.  Log in to your **Twilio Console** and purchase a phone number.
+2.  Navigate to **Phone Numbers** &rarr; **Manage** &rarr; **Active Numbers** and click on your purchased number.
+3.  Scroll down to the **Voice & Fax** section.
+4.  Under **A CALL COMES IN**, select **Webhook** from the dropdown.
+5.  Set the HTTP request type to **POST**.
+6.  Paste your webhook URL (substituting your specific `tenantId` and `agentId`):
     ```text
-    https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound
+    https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound/[tenantId]/[agentId]
     ```
-*   **SMS & WhatsApp Chat**: Under phone number messaging settings (or WhatsApp sandbox configuration), configure the messaging webhook **HTTP POST**:
+7.  Click **Save**. Dial the number from your phone to test the conversational voice agent!
+
+#### Twilio SMS & WhatsApp Setup
+*   Under phone number messaging settings (or WhatsApp sandbox configuration), configure the messaging webhook **HTTP POST** to:
     ```text
     https://conversa-backend-6bou.onrender.com/api/v1/webhooks/twilio/messaging
     ```
@@ -361,20 +370,30 @@ Integrate Conversa AI directly with your Twilio account to handle incoming phone
 ### 3. 🟢 Telnyx TeXML Setup (Free Developer Testing)
 To test with real phone numbers for free, register a free Telnyx account (which includes $10 in trial credits) and purchase a local/national test number.
 
-1.  Navigate to **Voice & Fax > Programmable Voice** in the Telnyx Portal.
-2.  Create a **TeXML Application** and point the **Webhook URL** (HTTP POST) to:
-    ```text
-    https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound
-    ```
-3.  Assign your purchased number to the TeXML Application under the **My Numbers** portal. Telnyx will route physical calls directly to Conversa for free using your trial credits.
+#### Step-by-Step Configuration:
+1.  **Register for Trial Credits**: Go to [Telnyx](https://telnyx.com/) and register. Your account will automatically credit with $10 in trial balance (no credit card required).
+2.  **Buy a Test Phone Number**: Navigate to **Numbers** &rarr; **Search & Buy**. Purchase a local phone number (this will deduct a small amount, typically $1, from your free trial balance).
+3.  **Create a TeXML Application**: Go to **Voice & Fax** &rarr; **TeXML**, click **Create TeXML Application**, and set:
+    *   **Name**: Conversa AI Voice Gateway
+    *   **Webhook URL**:
+        ```text
+        https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound/[tenantId]/[agentId]
+        ```
+    *   **HTTP Method**: `POST`
+4.  **Link Number to TeXML App**: Go to **Numbers** &rarr; **My Numbers**, configure your purchased number, set connection type to **TeXML Application**, and select your app.
 
 ---
 
-### 4. 🎛️ Self-Hosted SIP PBX Gateways (Asterisk / Verizon / GSM Hardware)
+### 4. 🎛️ Self-Hosted SIP PBX Gateways (Asterisk / Linphone / GSM Hardware)
 For telecom providers (like Verizon, MTN) or setups utilizing **physical GSM hardware gateways** (to route calls from local SIM cards over the internet), you can route standard SIP connections to Conversa.
 
-#### Asterisk Gateway Configuration (`sip.conf`)
-Configure your trunk to connect your telephone carrier or physical GSM gateway:
+#### Method A: SIP-to-SIP Testing (100% Free)
+1.  Sign up for a free SIP address at [SIP2SIP](https://sip2sip.info/) or [Linphone.org](https://www.linphone.org/free-sip-service.html).
+2.  Download the free **Linphone** or **Zoiper** softphone app on your computer or smartphone.
+3.  Log in to the softphone app using your new SIP credentials. You can now dial any SIP address (e.g. `sip:test@sip2sip.info`) for free over the internet without cellular carrier costs.
+
+#### Method B: Self-Hosted Asterisk PBX Configuration
+Configure your trunk to connect your telephone carrier or physical GSM gateway inside `/etc/asterisk/sip.conf`:
 ```ini
 [carrier-trunk]
 type=peer
@@ -385,17 +404,25 @@ allow=ulaw
 allow=alaw
 ```
 
-#### Asterisk Dialplan Configuration (`extensions.conf`)
-Route calls received on the carrier lines to Conversa's voice gateway over HTTP:
+Route incoming calls to Conversa's voice gateway over HTTP inside `/etc/asterisk/extensions.conf`:
 ```ini
 [incoming-sip-carrier]
-exten => _+X.,1,NoOp(Relaying call to Conversa AI Gateway)
+exten => 2000,1,NoOp(Relaying call to Conversa AI Gateway)
  same => n,Answer()
- same => n,Playback(connecting-conversa-voice)
- ; Forward audio stream using an AGI script or local wrapper to Conversa
- same => n,AGI(agi://conversa-backend-6bou.onrender.com/voice-gateway)
+ same => n,Set(API_URL=https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound/[tenantId]/[agentId])
+ ; Forward audio stream using an AGI script to Conversa
+ same => n,AGI(agi://conversa-agi.onrender.com,${API_URL})
  same => n,Hangup()
 ```
+
+#### Method C: Android GSM Gateway (Bridging a local SIM card)
+If you have a spare local SIM card (e.g. MTN, Airtel, Safaricom) and want callers to reach you at standard local cellular rates:
+1.  Insert your spare SIM card into an Android phone.
+2.  Install a GSM-to-SIP gateway application (like **Sim2Sip** or configure a SIP client on **Linphone**).
+3.  Register the gateway app to a SIP extension on your cloud Asterisk PBX (e.g. extension `1001`).
+4.  Configure the gateway app to auto-answer incoming cell calls and forward the audio stream to Asterisk extension `2000` (Conversa AI).
+5.  Ensure all permissions (Microphone, Phone, Display over other apps) are granted in Android Settings.
+*   *Note: iOS does not support GSM-to-SIP bridging due to background call interception limitations.*
 
 ---
 
@@ -404,6 +431,10 @@ You can connect Conversa AI to active digital meeting rooms and audio channels:
 
 *   **Discord Voice Channels**: Build a Discord bot application in Node.js or Python. Set the bot to join the voice channel, listen to user speaking packets, pipe the raw PCM audio buffers to the `/api/v1/conversation/message` or streaming voice gateway, and stream the generated TTS response bytes back to the channel.
 *   **Zoom & Google Meet**: Use **SIP Audio Join** connectors. Set up a virtual participant bot in Zoom that dials into your self-hosted Asterisk server. Asterisk then bridges the participant's voice stream to Conversa's audio engine.
+*   **WhatsApp Chatbots**: Configure your WhatsApp Business Cloud API webhook callback to send message payloads to:
+    ```text
+    https://conversa-backend-6bou.onrender.com/api/v1/webhook/whatsapp
+    ```
 
 ---
 
