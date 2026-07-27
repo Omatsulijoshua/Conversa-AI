@@ -36,5 +36,7 @@ export declare class AuthService {
         password: string | null;
         createdAt: Date;
         updatedAt: Date;
+        plan: string;
+        usageLimit: number;
     } | null>;
 }

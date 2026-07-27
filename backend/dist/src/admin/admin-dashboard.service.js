@@ -150,6 +150,50 @@ let AdminDashboardService = class AdminDashboardService {
             .map(part => part[0]?.toUpperCase())
             .join('');
     }
+    async getDevelopers() {
+        const tenants = await this.prisma.tenant.findMany({
+            include: {
+                _count: {
+                    select: {
+                        agents: true,
+                        calls: true,
+                    }
+                },
+                usage: {
+                    select: {
+                        metric: true,
+                        quantity: true,
+                    }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        return tenants.map(tenant => {
+            const totalMessages = tenant.usage
+                .filter(u => u.metric === 'messages')
+                .reduce((sum, u) => sum + u.quantity, 0);
+            return {
+                id: tenant.id,
+                name: tenant.name,
+                email: tenant.email,
+                plan: tenant.plan || 'Starter',
+                usageLimit: tenant.usageLimit || 1000,
+                usageUsed: totalMessages,
+                agentsCount: tenant._count.agents,
+                callsCount: tenant._count.calls,
+                createdAt: tenant.createdAt,
+            };
+        });
+    }
+    async updateDeveloper(id, plan, usageLimit) {
+        return this.prisma.tenant.update({
+            where: { id },
+            data: {
+                plan,
+                usageLimit,
+            },
+        });
+    }
 };
 exports.AdminDashboardService = AdminDashboardService;
 exports.AdminDashboardService = AdminDashboardService = __decorate([

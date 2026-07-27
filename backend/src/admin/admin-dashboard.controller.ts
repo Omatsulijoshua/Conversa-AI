@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Headers, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Param, Body, Headers, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AdminDashboardService } from './admin-dashboard.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -47,5 +47,30 @@ export class AdminDashboardController {
     }
 
     return this.adminDashboardService.getOverview();
+  }
+
+  @Get('developers')
+  getDevelopers(@Headers('x-admin-token') adminToken?: string) {
+    const expectedToken = this.config.get<string>('ADMIN_DASHBOARD_TOKEN');
+    if (expectedToken && adminToken !== expectedToken) {
+      throw new UnauthorizedException('Invalid admin dashboard token');
+    }
+
+    return this.adminDashboardService.getDevelopers();
+  }
+
+  @Put('developers/:id')
+  updateDeveloper(
+    @Param('id') id: string,
+    @Body() body: any,
+    @Headers('x-admin-token') adminToken?: string,
+  ) {
+    const expectedToken = this.config.get<string>('ADMIN_DASHBOARD_TOKEN');
+    if (expectedToken && adminToken !== expectedToken) {
+      throw new UnauthorizedException('Invalid admin dashboard token');
+    }
+
+    const { plan, usageLimit } = body;
+    return this.adminDashboardService.updateDeveloper(id, plan, Number(usageLimit));
   }
 }

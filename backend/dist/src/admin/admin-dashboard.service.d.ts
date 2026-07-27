@@ -36,4 +36,25 @@ export declare class AdminDashboardService {
     private average;
     private startOfToday;
     private initials;
+    getDevelopers(): Promise<{
+        id: string;
+        name: string;
+        email: string;
+        plan: any;
+        usageLimit: any;
+        usageUsed: number;
+        agentsCount: number;
+        callsCount: number;
+        createdAt: Date;
+    }[]>;
+    updateDeveloper(id: string, plan: string, usageLimit: number): Promise<{
+        id: string;
+        email: string;
+        name: string;
+        password: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        plan: string;
+        usageLimit: number;
+    }>;
 }

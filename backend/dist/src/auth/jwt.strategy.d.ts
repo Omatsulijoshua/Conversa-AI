@@ -14,6 +14,8 @@ export declare class JwtStrategy extends JwtStrategy_base {
         password: string | null;
         createdAt: Date;
         updatedAt: Date;
+        plan: string;
+        usageLimit: number;
     } | null>;
 }
 export {};

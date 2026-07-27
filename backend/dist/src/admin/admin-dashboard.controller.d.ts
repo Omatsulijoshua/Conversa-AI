@@ -38,4 +38,25 @@ export declare class AdminDashboardController {
             industry: string | null;
         }[];
     }>;
+    getDevelopers(adminToken?: string): Promise<{
+        id: string;
+        name: string;
+        email: string;
+        plan: any;
+        usageLimit: any;
+        usageUsed: number;
+        agentsCount: number;
+        callsCount: number;
+        createdAt: Date;
+    }[]>;
+    updateDeveloper(id: string, body: any, adminToken?: string): Promise<{
+        id: string;
+        email: string;
+        name: string;
+        password: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        plan: string;
+        usageLimit: number;
+    }>;
 }

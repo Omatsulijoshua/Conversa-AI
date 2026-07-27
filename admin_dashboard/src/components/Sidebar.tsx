@@ -5,25 +5,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
-  Terminal,
-  Key, 
-  UserCircle, 
-  Mic2, 
-  BarChart3, 
   Settings,
   HelpCircle,
   LogOut,
   Menu,
-  X
+  X,
+  Users
 } from 'lucide-react';
 
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: Terminal, label: 'Playground', href: '/playground' },
-  { icon: Key, label: 'API Keys', href: '/api-keys' },
-  { icon: UserCircle, label: 'AI Agents', href: '/agents' },
-  { icon: Mic2, label: 'Voice Lab', href: '/voice-lab' },
-  { icon: BarChart3, label: 'Analytics', href: '/analytics' },
+  { icon: Users, label: 'Developers', href: '/developers' },
   { icon: Settings, label: 'Settings', href: '/settings' },
 ];
 

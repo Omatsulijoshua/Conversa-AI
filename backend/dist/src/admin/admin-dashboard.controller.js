@@ -85,6 +85,21 @@ let AdminDashboardController = class AdminDashboardController {
         }
         return this.adminDashboardService.getOverview();
     }
+    getDevelopers(adminToken) {
+        const expectedToken = this.config.get('ADMIN_DASHBOARD_TOKEN');
+        if (expectedToken && adminToken !== expectedToken) {
+            throw new common_1.UnauthorizedException('Invalid admin dashboard token');
+        }
+        return this.adminDashboardService.getDevelopers();
+    }
+    updateDeveloper(id, body, adminToken) {
+        const expectedToken = this.config.get('ADMIN_DASHBOARD_TOKEN');
+        if (expectedToken && adminToken !== expectedToken) {
+            throw new common_1.UnauthorizedException('Invalid admin dashboard token');
+        }
+        const { plan, usageLimit } = body;
+        return this.adminDashboardService.updateDeveloper(id, plan, Number(usageLimit));
+    }
 };
 exports.AdminDashboardController = AdminDashboardController;
 __decorate([
@@ -101,6 +116,22 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], AdminDashboardController.prototype, "getOverview", null);
+__decorate([
+    (0, common_1.Get)('developers'),
+    __param(0, (0, common_1.Headers)('x-admin-token')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], AdminDashboardController.prototype, "getDevelopers", null);
+__decorate([
+    (0, common_1.Put)('developers/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Headers)('x-admin-token')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, String]),
+    __metadata("design:returntype", void 0)
+], AdminDashboardController.prototype, "updateDeveloper", null);
 exports.AdminDashboardController = AdminDashboardController = __decorate([
     (0, common_1.Controller)('admin'),
     __metadata("design:paramtypes", [admin_dashboard_service_1.AdminDashboardService,
