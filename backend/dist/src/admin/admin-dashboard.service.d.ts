@@ -22,13 +22,13 @@ export declare class AdminDashboardService {
             label: string;
             value: number;
         }[];
-        activeAgents: {
+        latestDevelopers: {
             id: string;
             name: string;
+            email: string;
+            plan: any;
             initials: string;
-            status: string;
-            callsToday: number;
-            industry: string | null;
+            createdAt: Date;
         }[];
     }>;
     private buildUsageSeries;

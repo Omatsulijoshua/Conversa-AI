@@ -42,13 +42,13 @@ type AdminOverview = {
     value: number;
     percent: number;
   }>;
-  activeAgents: Array<{
+  latestDevelopers: Array<{
     id: string;
     name: string;
+    email: string;
+    plan: string;
     initials: string;
-    status: string;
-    callsToday: number;
-    industry?: string | null;
+    createdAt: string;
   }>;
 };
 
@@ -105,8 +105,8 @@ export default function Dashboard() {
   return (
     <div className="animate-fade-in">
       <header className="mb-10">
-        <h1 className="text-3xl font-bold mb-2">Welcome back, Developer</h1>
-        <p className="text-gray-400">Here's what's happening with your AI agents today.</p>
+        <h1 className="text-3xl font-bold mb-2">Welcome back, Admin</h1>
+        <p className="text-gray-400">Here's what's happening on your platform today.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -164,39 +164,40 @@ export default function Dashboard() {
             <div className="h-[300px] flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl">
               <BarChart3 className="w-12 h-12 text-white/10 mb-4" />
               <p className="text-gray-500">No usage records yet</p>
-              <span className="text-xs text-gray-600 mt-2">Train and test an agent to populate this chart.</span>
+              <span className="text-xs text-gray-600 mt-2">Active developer traffic will populate this chart.</span>
             </div>
           )}
         </div>
 
         <div className="glass-card p-8">
-          <h3 className="text-xl font-bold mb-6">Active Agents</h3>
+          <h3 className="text-xl font-bold mb-6">Latest Developers</h3>
           <div className="space-y-6">
-            {overview?.activeAgents.length ? (
-              overview.activeAgents.map((agent) => (
-                <div key={agent.id} className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold">
-                    {agent.initials || 'AI'}
+            {overview?.latestDevelopers.length ? (
+              overview.latestDevelopers.map((dev) => (
+                <div key={dev.id} className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-bold text-white text-xs">
+                    {dev.initials || 'DEV'}
                   </div>
-                  <div className="min-w-0">
-                    <h4 className="font-semibold truncate">{agent.name}</h4>
-                    <p className="text-xs text-gray-400">
-                      {agent.status} • {agent.callsToday.toLocaleString()} calls today
-                    </p>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-semibold truncate text-white">{dev.name}</h4>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-gray-400 truncate">{dev.email}</span>
+                      <span className="inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-indigo-600/10 text-indigo-400 border border-indigo-500/10">{dev.plan}</span>
+                    </div>
                   </div>
-                  <Link href="/agents" className="ml-auto p-2 hover:bg-white/5 rounded-lg transition-colors">
+                  <Link href="/developers" className="p-2 hover:bg-white/5 rounded-lg transition-colors">
                     <ArrowUpRight className="w-4 h-4 text-gray-400" />
                   </Link>
                 </div>
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-white/10 p-6 text-center">
-                <p className="text-gray-500">No agents in the database yet.</p>
+                <p className="text-gray-500">No developers signed up yet.</p>
               </div>
             )}
           </div>
-          <Link href="/agents" className="block text-center w-full mt-8 py-3 rounded-xl border border-white/5 hover:bg-white/5 transition-all text-sm font-medium">
-            View All Agents
+          <Link href="/developers" className="block text-center w-full mt-8 py-3 rounded-xl border border-white/5 hover:bg-white/5 transition-all text-sm font-medium text-slate-400 hover:text-white">
+            Manage Developers
           </Link>
         </div>
       </div>

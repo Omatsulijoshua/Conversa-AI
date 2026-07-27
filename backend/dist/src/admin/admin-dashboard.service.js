@@ -23,7 +23,7 @@ let AdminDashboardService = class AdminDashboardService {
         const start = new Date(now);
         start.setHours(0, 0, 0, 0);
         start.setDate(start.getDate() - 6);
-        const [usageTotals, usageRows, agents, callsToday, allCalls] = await Promise.all([
+        const [usageTotals, usageRows, developers, callsToday, allCalls] = await Promise.all([
             this.prisma.usage.groupBy({
                 by: ['metric'],
                 _sum: { quantity: true },
@@ -33,14 +33,15 @@ let AdminDashboardService = class AdminDashboardService {
                 select: { metric: true, quantity: true, timestamp: true },
                 orderBy: { timestamp: 'asc' },
             }),
-            this.prisma.agent.findMany({
+            this.prisma.tenant.findMany({
                 orderBy: { createdAt: 'desc' },
-                take: 8,
-                include: {
-                    calls: {
-                        where: { createdAt: { gte: this.startOfToday() } },
-                        select: { id: true },
-                    },
+                take: 5,
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    plan: true,
+                    createdAt: true,
                 },
             }),
             this.prisma.call.count({
@@ -70,13 +71,13 @@ let AdminDashboardService = class AdminDashboardService {
             },
             usageSeries: this.buildUsageSeries(usageRows, start),
             serviceDistribution: this.buildServiceDistribution(totals),
-            activeAgents: agents.map(agent => ({
-                id: agent.id,
-                name: agent.name,
-                initials: this.initials(agent.name),
-                status: 'Active',
-                callsToday: agent.calls.length,
-                industry: agent.industry,
+            latestDevelopers: developers.map(dev => ({
+                id: dev.id,
+                name: dev.name,
+                email: dev.email,
+                plan: dev.plan || 'Starter',
+                initials: this.initials(dev.name),
+                createdAt: dev.createdAt,
             })),
         };
     }
