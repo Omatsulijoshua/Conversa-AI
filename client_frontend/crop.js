@@ -2,7 +2,7 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
-const inputPath = 'C:\\Users\\Joshua\\.gemini\\antigravity\\brain\\323a6ade-d15a-44b2-9999-0fd18af2289a\\.user_uploaded\\media__1785060663261.jpg';
+const inputPath = 'C:\\Users\\Joshua\\.gemini\\antigravity\\brain\\323a6ade-d15a-44b2-9999-0fd18af2289a\\.user_uploaded\\media__1785236736243.jpg';
 
 async function cropLogos() {
   try {
@@ -44,19 +44,21 @@ async function cropLogos() {
       })
       .toBuffer();
 
-    // Save to client_frontend/public
+    // Save to client_frontend/public & src/app
     fs.writeFileSync(path.join(__dirname, 'public', 'logo.png'), fullLogo);
     fs.writeFileSync(path.join(__dirname, 'public', 'logo_icon.png'), icon);
-    console.log('Saved cropped logos to client_frontend public folder.');
-
-    // Save to admin_dashboard/public
+    fs.writeFileSync(path.join(__dirname, 'src', 'app', 'icon.png'), icon);
+    console.log('Saved cropped logos to client_frontend folder.');
+ 
+    // Save to admin_dashboard/public & src/app
     const adminPublicDir = path.join(__dirname, '..', 'admin_dashboard', 'public');
     if (!fs.existsSync(adminPublicDir)) {
       fs.mkdirSync(adminPublicDir, { recursive: true });
     }
     fs.writeFileSync(path.join(adminPublicDir, 'logo.png'), fullLogo);
     fs.writeFileSync(path.join(adminPublicDir, 'logo_icon.png'), icon);
-    console.log('Saved cropped logos to admin_dashboard public folder.');
+    fs.writeFileSync(path.join(__dirname, '..', 'admin_dashboard', 'src', 'app', 'icon.png'), icon);
+    console.log('Saved cropped logos to admin_dashboard folder.');
 
   } catch (err) {
     console.error('Cropping error:', err);
