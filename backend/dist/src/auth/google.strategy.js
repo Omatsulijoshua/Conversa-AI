@@ -20,7 +20,7 @@ let GoogleStrategy = class GoogleStrategy extends (0, passport_1.PassportStrateg
         super({
             clientID: config.get('GOOGLE_CLIENT_ID') || 'disabled-google-client-id',
             clientSecret: config.get('GOOGLE_CLIENT_SECRET') || 'disabled-google-client-secret',
-            callbackURL: `${config.get('BASE_URL') || 'http://localhost:3001'}/api/v1/auth/google/callback`,
+            callbackURL: `${config.get('BASE_URL') || 'https://conversa-backend-6bou.onrender.com'}/api/v1/auth/google/callback`,
             scope: ['email', 'profile'],
         });
         this.config = config;

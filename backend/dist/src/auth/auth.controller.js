@@ -30,7 +30,7 @@ let AuthController = class AuthController {
     async googleAuth(req) { }
     async googleAuthRedirect(req, res) {
         const result = await this.authService.googleLogin(req);
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+        const frontendUrl = process.env.FRONTEND_URL || 'https://conversa-ai-dashboard-live.vercel.app';
         res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
     }
 };
