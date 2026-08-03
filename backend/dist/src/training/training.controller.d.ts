@@ -18,6 +18,7 @@ export declare class TrainingController {
             industry: string | null;
             instructions: string | null;
             voiceId: string | null;
+            settings: import("@prisma/client/runtime/client").JsonValue | null;
         };
         knowledgeBase: {
             id: string;

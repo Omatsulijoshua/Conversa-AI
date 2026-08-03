@@ -53,6 +53,10 @@ export class ConversationService {
     const topChunks = await this.knowledge.query(conversation.agentId, message, 3);
     const knowledgeContext = topChunks.map((c: { content: string }) => `- ${c.content}`).join('\n');
 
+    const agentSettings = (conversation.agent.settings as any) || {};
+    const modelName = agentSettings.modelName || agentSettings.model || null;
+    const temperature = agentSettings.temperature !== undefined && agentSettings.temperature !== null ? Number(agentSettings.temperature) : null;
+
     const aiResponse = await this.ai.reply({
       tenantId,
       agent: {
@@ -63,6 +67,8 @@ export class ConversationService {
       },
       messages: recent,
       knowledgeContext: knowledgeContext.length ? knowledgeContext : null,
+      modelName,
+      temperature,
     });
     
     messages.push({ role: 'assistant', content: aiResponse, timestamp: new Date() });

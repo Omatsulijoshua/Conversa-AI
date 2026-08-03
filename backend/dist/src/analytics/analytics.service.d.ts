@@ -17,6 +17,7 @@ export declare class AnalyticsService {
             industry: string | null;
             instructions: string | null;
             voiceId: string | null;
+            settings: import("@prisma/client/runtime/client").JsonValue | null;
         };
     } & {
         id: string;

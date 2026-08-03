@@ -13,6 +13,7 @@ export declare class AgentController {
         industry: string | null;
         instructions: string | null;
         voiceId: string | null;
+        settings: import("@prisma/client/runtime/client").JsonValue | null;
     }>;
     findAll(req: Request): Promise<{
         id: string;
@@ -24,6 +25,7 @@ export declare class AgentController {
         industry: string | null;
         instructions: string | null;
         voiceId: string | null;
+        settings: import("@prisma/client/runtime/client").JsonValue | null;
     }[]>;
     findOne(req: Request, id: string): Promise<{
         id: string;
@@ -35,6 +37,7 @@ export declare class AgentController {
         industry: string | null;
         instructions: string | null;
         voiceId: string | null;
+        settings: import("@prisma/client/runtime/client").JsonValue | null;
     } | null>;
     update(req: Request, id: string, updateAgentDto: any): Promise<import("@prisma/client").Prisma.BatchPayload>;
     remove(req: Request, id: string): Promise<import("@prisma/client").Prisma.BatchPayload>;

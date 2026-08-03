@@ -15,6 +15,8 @@ export declare class AiService {
             content: string;
         }>;
         knowledgeContext?: string | null;
+        modelName?: string | null;
+        temperature?: number | null;
     }): Promise<string>;
     private callProvider;
     private callOpenAiCompatible;

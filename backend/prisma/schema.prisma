@@ -58,6 +58,7 @@ model Agent {
   conversations Conversation[]
   calls         Call[]
   knowledgeBases KnowledgeBase[]
+  settings     Json?          // Flexible JSON configuration (model, voice tuning sliders, custom actions, post-call variables)
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 }

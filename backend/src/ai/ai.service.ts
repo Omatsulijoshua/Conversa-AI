@@ -13,6 +13,8 @@ export class AiService {
     agent: { name: string; tone?: string | null; industry?: string | null; instructions?: string | null };
     messages: Array<{ role: 'user' | 'assistant'; content: string }>;
     knowledgeContext?: string | null;
+    modelName?: string | null;
+    temperature?: number | null;
   }): Promise<string> {
     const providerKey = await this.aiProviders.getActiveKey(params.tenantId);
     if (!providerKey) {
@@ -25,7 +27,7 @@ export class AiService {
       ...params.messages.map(m => ({ role: m.role, content: m.content })),
     ];
 
-    const response = await this.callProvider(providerKey, inputMessages);
+    const response = await this.callProvider(providerKey, inputMessages, params.modelName, params.temperature);
     await this.aiProviders.markUsed(providerKey.id);
     return response || this.localSupportReply(params.messages.at(-1)?.content || '', params.knowledgeContext);
   }
@@ -38,23 +40,29 @@ export class AiService {
       baseUrl: string | null;
     },
     messages: Array<{ role: ChatRole; content: string }>,
+    modelOverride?: string | null,
+    tempOverride?: number | null,
   ) {
     if (providerKey.provider === 'gemini') {
-      return this.callGemini(providerKey, messages);
+      return this.callGemini(providerKey, messages, modelOverride, tempOverride);
     }
 
     if (providerKey.provider === 'anthropic') {
-      return this.callAnthropic(providerKey, messages);
+      return this.callAnthropic(providerKey, messages, modelOverride, tempOverride);
     }
 
-    return this.callOpenAiCompatible(providerKey, messages);
+    return this.callOpenAiCompatible(providerKey, messages, modelOverride, tempOverride);
   }
 
   private async callOpenAiCompatible(
     providerKey: { provider: string; apiKey: string; modelName: string | null; baseUrl: string | null },
     messages: Array<{ role: ChatRole; content: string }>,
+    modelOverride?: string | null,
+    tempOverride?: number | null,
   ) {
     const baseUrl = providerKey.baseUrl || OPENAI_COMPATIBLE_BASE_URLS[providerKey.provider as keyof typeof OPENAI_COMPATIBLE_BASE_URLS];
+    const model = modelOverride || providerKey.modelName || 'gpt-4o-mini';
+    const temperature = tempOverride !== undefined && tempOverride !== null ? tempOverride : 0.4;
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
@@ -62,9 +70,9 @@ export class AiService {
         Authorization: `Bearer ${providerKey.apiKey}`,
       },
       body: JSON.stringify({
-        model: providerKey.modelName,
+        model,
         messages,
-        temperature: 0.4,
+        temperature,
       }),
     });
 
@@ -79,6 +87,8 @@ export class AiService {
   private async callGemini(
     providerKey: { apiKey: string; modelName: string | null },
     messages: Array<{ role: ChatRole; content: string }>,
+    modelOverride?: string | null,
+    tempOverride?: number | null,
   ) {
     const system = messages.find(message => message.role === 'system')?.content;
     const contents = messages
@@ -88,14 +98,15 @@ export class AiService {
         parts: [{ text: message.content }],
       }));
 
-    const model = providerKey.modelName || 'gemini-1.5-flash';
+    const model = modelOverride || providerKey.modelName || 'gemini-1.5-flash';
+    const temperature = tempOverride !== undefined && tempOverride !== null ? tempOverride : 0.4;
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${providerKey.apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
         contents,
-        generationConfig: { temperature: 0.4 },
+        generationConfig: { temperature },
       }),
     });
 
@@ -110,12 +121,16 @@ export class AiService {
   private async callAnthropic(
     providerKey: { apiKey: string; modelName: string | null },
     messages: Array<{ role: ChatRole; content: string }>,
+    modelOverride?: string | null,
+    tempOverride?: number | null,
   ) {
     const system = messages.find(message => message.role === 'system')?.content;
     const anthropicMessages = messages
       .filter(message => message.role !== 'system')
       .map(message => ({ role: message.role, content: message.content }));
 
+    const model = modelOverride || providerKey.modelName || 'claude-3-5-haiku-latest';
+    const temperature = tempOverride !== undefined && tempOverride !== null ? tempOverride : 0.4;
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -124,9 +139,9 @@ export class AiService {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: providerKey.modelName || 'claude-3-5-haiku-latest',
+        model,
         max_tokens: 800,
-        temperature: 0.4,
+        temperature,
         ...(system ? { system } : {}),
         messages: anthropicMessages,
       }),

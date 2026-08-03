@@ -26,6 +26,7 @@ let AgentService = class AgentService {
                 industry: data.industry || data.type,
                 instructions: data.instructions || this.defaultBusinessRules(data.type || data.industry || 'Support', tone),
                 voiceId: data.voiceId || data.voice,
+                settings: data.settings || {},
                 tenantId,
             },
         });
@@ -49,6 +50,7 @@ let AgentService = class AgentService {
                 ...(data.industry !== undefined || data.type !== undefined ? { industry: data.industry || data.type } : {}),
                 ...(data.instructions !== undefined ? { instructions: data.instructions } : {}),
                 ...(data.voiceId !== undefined || data.voice !== undefined ? { voiceId: data.voiceId || data.voice } : {}),
+                ...(data.settings !== undefined ? { settings: data.settings } : {}),
             },
         });
     }

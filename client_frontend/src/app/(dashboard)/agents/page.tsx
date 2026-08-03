@@ -183,83 +183,177 @@ const defaultRules = {
   closing: 'Summarize the next step and ask if there is anything else you can help with.',
 };
 
-const BusinessRulesModal = ({ agent, onClose, onSaved }: { agent: any, onClose: () => void, onSaved: () => void }) => {
-  const [rules, setRules] = useState(defaultRules);
-  const [mode, setMode] = useState<'basic' | 'developer'>('basic');
-  const [developerInstructions, setDeveloperInstructions] = useState('');
-  const [developerNotes, setDeveloperNotes] = useState('{\n  "handoffTriggers": ["angry customer", "billing dispute"],\n  "testCases": ["refund request", "forgot password"],\n  "integrations": []\n}');
+const AgentStudioModal = ({ agent, onClose, onSaved }: { agent: any, onClose: () => void, onSaved: () => void }) => {
+  const [activeTab, setActiveTab] = useState<'general' | 'voice' | 'knowledge' | 'actions' | 'extraction' | 'connect'>('general');
+  const [name, setName] = useState(agent.name || '');
+  const [tone, setTone] = useState(agent.tone || 'Warm, patient, clear, and natural.');
+  const [industry, setIndustry] = useState(agent.industry || 'Support');
+  const [instructions, setInstructions] = useState(agent.instructions || '');
+  const [voiceId, setVoiceId] = useState(agent.voiceId || 'Amy');
+
+  // Settings states
+  const initialSettings = agent.settings || {};
+  const [model, setModel] = useState(initialSettings.model || 'gemini-1.5-flash');
+  const [temperature, setTemperature] = useState(initialSettings.temperature !== undefined ? initialSettings.temperature : 0.4);
+  const [voiceStability, setVoiceStability] = useState(initialSettings.voiceStability !== undefined ? initialSettings.voiceStability : 75);
+  const [voiceSimilarity, setVoiceSimilarity] = useState(initialSettings.voiceSimilarity !== undefined ? initialSettings.voiceSimilarity : 75);
+  const [voiceSpeed, setVoiceSpeed] = useState(initialSettings.voiceSpeed !== undefined ? initialSettings.voiceSpeed : 100);
+  const [greeting, setGreeting] = useState(initialSettings.greeting || 'Hi, thanks for calling. How can I help you today?');
+  const [speakFirst, setSpeakFirst] = useState(initialSettings.speakFirst !== undefined ? initialSettings.speakFirst : true);
+
+  // Tools & Extractions states
+  const [tools, setTools] = useState<any[]>(initialSettings.tools || []);
+  const [newTool, setNewTool] = useState({ name: '', description: '', url: '' });
+  const [extractions, setExtractions] = useState<any[]>(initialSettings.extractions || []);
+  const [newExtraction, setNewExtraction] = useState({ key: '', description: '', type: 'string' });
+
+  // Knowledge base state integration
+  const [kbBases, setKbBases] = useState<any[]>([]);
+  const [kbLoading, setKbLoading] = useState(true);
+  const [kbUploading, setKbUploading] = useState(false);
+  const [newKbName, setNewKbName] = useState('');
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [activeConnectTab, setActiveConnectTab] = useState('webrtc');
 
   useEffect(() => {
-    const instructions = agent.instructions || '';
-    setRules({
-      ...defaultRules,
-      tone: agent.tone || defaultRules.tone,
-      goal: instructions || defaultRules.goal,
-    });
-    setDeveloperInstructions(instructions || buildDefaultInstructions(agent.tone || defaultRules.tone));
-  }, [agent]);
+    loadKb();
+  }, []);
 
-  const updateRule = (key: keyof typeof defaultRules, value: string) => {
-    setRules(prev => ({ ...prev, [key]: value }));
+  async function loadKb() {
+    try {
+      const data = await apiRequest(`/knowledge/${agent.id}`);
+      setKbBases(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setKbLoading(false);
+    }
+  }
+
+  const handleCreateBase = async () => {
+    if (!newKbName) return;
+    try {
+      await apiRequest(`/knowledge/${agent.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ name: newKbName })
+      });
+      setNewKbName('');
+      loadKb();
+    } catch (err) {
+      alert('Failed to create knowledge base');
+    }
   };
 
-  const buildInstructions = () => [
-    'Business Rules for Customer Calls',
-    `Greeting: ${rules.greeting}`,
-    `Tone: ${rules.tone}`,
-    `Main Goal: ${rules.goal}`,
-    `Business Hours: ${rules.businessHours}`,
-    `Refund Policy: ${rules.refundPolicy}`,
-    `Escalation Rules: ${rules.escalationRules}`,
-    `Information to Collect: ${rules.collectInfo}`,
-    `Never Say or Ask: ${rules.neverSay}`,
-    `Call Closing: ${rules.closing}`,
-    'Use these rules on every conversation. If the customer asks something outside these rules, be honest, collect the right details, and escalate to a human.',
-  ].join('\n\n');
+  const handleFileUpload = async (kbId: string, e: any) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setKbUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const token = localStorage.getItem('conversa_token');
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://conversa-backend-6bou.onrender.com/api/v1'}/knowledge/${kbId}/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      loadKb();
+    } catch (err) {
+      alert('Upload failed');
+    } finally {
+      setKbUploading(false);
+    }
+  };
 
-  const buildDefaultInstructions = (tone: string) => [
-    'Business Rules for Customer Calls',
-    `Tone: ${tone}`,
-    'Main Goal: Resolve customer issues quickly, explain next steps, and escalate when needed.',
-    'Developer Notes: Add exact call-flow rules, webhook/tool requirements, structured outputs, and test cases here.',
-  ].join('\n\n');
+  const handleAddTool = () => {
+    if (!newTool.name || !newTool.url) return;
+    setTools([...tools, newTool]);
+    setNewTool({ name: '', description: '', url: '' });
+  };
 
-  const saveRules = async () => {
+  const handleRemoveTool = (index: number) => {
+    setTools(tools.filter((_, i) => i !== index));
+  };
+
+  const handleAddExtraction = () => {
+    if (!newExtraction.key) return;
+    setExtractions([...extractions, newExtraction]);
+    setNewExtraction({ key: '', description: '', type: 'string' });
+  };
+
+  const handleRemoveExtraction = (index: number) => {
+    setExtractions(extractions.filter((_, i) => i !== index));
+  };
+
+  const saveSettings = async () => {
     setSaving(true);
     setSaved(false);
     try {
-      const instructions = mode === 'developer'
-        ? `${developerInstructions.trim()}\n\nDeveloper Training Notes:\n${developerNotes.trim()}`
-        : buildInstructions();
       await apiRequest(`/agent/${agent.id}`, {
         method: 'PATCH',
         body: JSON.stringify({
-          tone: mode === 'developer' ? agent.tone || rules.tone : rules.tone,
+          name,
+          tone,
+          industry,
           instructions,
-        }),
+          voiceId,
+          settings: {
+            model,
+            temperature,
+            voiceStability,
+            voiceSimilarity,
+            voiceSpeed,
+            greeting,
+            speakFirst,
+            tools,
+            extractions
+          }
+        })
       });
       setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
       onSaved();
     } catch (err) {
-      alert('Failed to save business rules');
+      alert('Failed to save agent settings');
     } finally {
       setSaving(false);
     }
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const webhookUrl = `https://conversa-backend-6bou.onrender.com/api/v1/voice/telephony/inbound/${agent.tenantId}/${agent.id}`;
+
+  const tabs = [
+    { id: 'general', label: '🧠 Brain & Model' },
+    { id: 'voice', label: '🎙️ Vocal settings' },
+    { id: 'knowledge', label: '📚 Knowledge Base' },
+    { id: 'actions', label: '🛠️ Custom Actions' },
+    { id: 'extraction', label: '🔍 Extractions' },
+    { id: 'connect', label: '🔌 Connect' }
+  ];
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="glass-card w-full max-w-5xl max-h-[90vh] overflow-y-auto p-8 rounded-[2rem] border border-white/10 bg-slate-950 shadow-2xl">
-        <div className="flex justify-between items-start mb-8">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
+      <div className="glass-card w-full max-w-6xl max-h-[95vh] overflow-hidden rounded-[3rem] border border-white/10 bg-slate-950 flex flex-col shadow-2xl relative">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl -mr-32 -mt-32" />
+        
+        {/* Header */}
+        <div className="p-8 border-b border-white/5 flex justify-between items-center relative z-10 flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-indigo-600 rounded-2xl">
-              <ClipboardList className="w-6 h-6 text-white" />
+              <BrainCircuit className="w-6 h-6 text-white animate-pulse" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-white">{agent.name} Business Rules</h3>
-              <p className="text-slate-400 text-sm">Plain-language rules for business users, with a developer option for advanced training.</p>
+              <h3 className="text-2xl font-bold text-white">{name || 'Agent'} Agent Studio</h3>
+              <p className="text-slate-400 text-sm">Configure conversation flows, models, voices, RAG knowledge, and webhooks</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-all">
@@ -267,103 +361,622 @@ const BusinessRulesModal = ({ agent, onClose, onSaved }: { agent: any, onClose: 
           </button>
         </div>
 
-        <div className="flex gap-2 mb-6 p-1 bg-white/5 border border-white/10 rounded-2xl w-fit">
-          <button
-            type="button"
-            onClick={() => setMode('basic')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${mode === 'basic' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            <ClipboardList className="w-4 h-4" />
-            Simple Rules
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('developer')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${mode === 'developer' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
-          >
-            <Code2 className="w-4 h-4" />
-            Developer
-          </button>
+        {/* Studio Sub-Navigation */}
+        <div className="px-8 py-3 bg-slate-900/60 border-b border-white/5 flex gap-2 overflow-x-auto scrollbar-hide relative z-10 flex-shrink-0">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {mode === 'basic' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <RuleField label="How should calls start?" value={rules.greeting} onChange={(value) => updateRule('greeting', value)} />
-            <RuleField label="What should the agent sound like?" value={rules.tone} onChange={(value) => updateRule('tone', value)} />
-            <RuleField label="What is the main job?" value={rules.goal} onChange={(value) => updateRule('goal', value)} large />
-            <RuleField label="Business hours" value={rules.businessHours} onChange={(value) => updateRule('businessHours', value)} />
-            <RuleField label="Refund or return rules" value={rules.refundPolicy} onChange={(value) => updateRule('refundPolicy', value)} large />
-            <RuleField label="When should it send to a human?" value={rules.escalationRules} onChange={(value) => updateRule('escalationRules', value)} large />
-            <RuleField label="What customer details should it collect?" value={rules.collectInfo} onChange={(value) => updateRule('collectInfo', value)} large />
-            <RuleField label="What must it never ask or say?" value={rules.neverSay} onChange={(value) => updateRule('neverSay', value)} large />
-            <RuleField label="How should calls end?" value={rules.closing} onChange={(value) => updateRule('closing', value)} large />
+        {/* Studio Main Workspace */}
+        <div className="flex-1 overflow-y-auto p-8 relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Active Configuration Pane */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* GENERAL TAB */}
+            {activeTab === 'general' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Agent Name</label>
+                    <input 
+                      type="text" 
+                      value={name} 
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 text-sm font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Industry Type</label>
+                    <input 
+                      type="text" 
+                      value={industry} 
+                      onChange={(e) => setIndustry(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 text-sm font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Conversation Tone</label>
+                    <input 
+                      type="text" 
+                      value={tone} 
+                      onChange={(e) => setTone(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 text-sm font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">LLM Model Override</label>
+                    <select 
+                      value={model} 
+                      onChange={(e) => setModel(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white outline-none focus:border-indigo-500 text-sm"
+                    >
+                      <option value="gemini-1.5-flash">Gemini 1.5 Flash (Default - Ultra Fast)</option>
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro (Deep Reasoner)</option>
+                      <option value="gpt-4o-mini">GPT-4o Mini (Cost-efficient)</option>
+                      <option value="gpt-4o">GPT-4o (Premium Performance)</option>
+                      <option value="claude-3-5-haiku-latest">Claude 3.5 Haiku</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2 flex justify-between">
+                      <span>LLM Creativity (Temperature)</span>
+                      <span className="text-indigo-400">{temperature}</span>
+                    </label>
+                    <input 
+                      type="range" 
+                      min="0.0" 
+                      max="1.0" 
+                      step="0.05"
+                      value={temperature} 
+                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-white/5 rounded-lg appearance-none cursor-pointer accent-indigo-600 mt-3"
+                    />
+                    <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                      <span>Strict / Consistent</span>
+                      <span>Creative / Random</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">System Instructions / Roleplay Prompt</label>
+                  <textarea
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    rows={8}
+                    placeholder="Enter instructions on how the agent should handle calls, handle refund rules, or escalate..."
+                    className="w-full font-mono text-xs bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white outline-none focus:border-indigo-500 leading-relaxed resize-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* VOICE TAB */}
+            {activeTab === 'voice' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Primary Voice Preset</label>
+                    <select 
+                      value={voiceId} 
+                      onChange={(e) => setVoiceId(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white outline-none focus:border-indigo-500 text-sm"
+                    >
+                      <option value="Amy">Amy (Warm & Professional Female)</option>
+                      <option value="Marcus">Marcus (Deep & Articulate Male)</option>
+                      <option value="Sophia">Sophia (Energetic Customer Rep)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Or enter Custom ElevenLabs Voice ID</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. 21m00Tcm4TlvDq8ikWAM"
+                      value={voiceId !== 'Amy' && voiceId !== 'Marcus' && voiceId !== 'Sophia' ? voiceId : ''}
+                      onChange={(e) => setVoiceId(e.target.value || 'Amy')}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500 text-sm font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-2">Initial Greeting Message</label>
+                  <textarea
+                    value={greeting}
+                    onChange={(e) => setGreeting(e.target.value)}
+                    rows={2}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white outline-none focus:border-indigo-500 text-sm leading-relaxed"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-white/2 border border-white/5 rounded-2xl">
+                  <div>
+                    <p className="text-sm font-bold text-white">Agent Speaks First</p>
+                    <p className="text-xs text-slate-500">If enabled, the agent initiates the call with the greeting message. Otherwise, it waits for the caller to speak.</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={speakFirst}
+                      onChange={(e) => setSpeakFirst(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 peer-checked:after:bg-white"></div>
+                  </label>
+                </div>
+
+                <div className="space-y-5 border-t border-white/5 pt-6">
+                  <h4 className="text-sm font-bold text-white">ElevenLabs Voice Tuning Sliders</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-1 flex justify-between">
+                        <span>Stability</span>
+                        <span className="text-indigo-400">{voiceStability}%</span>
+                      </label>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        value={voiceStability} 
+                        onChange={(e) => setVoiceStability(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-1 flex justify-between">
+                        <span>Clarity / Similarity</span>
+                        <span className="text-indigo-400">{voiceSimilarity}%</span>
+                      </label>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        value={voiceSimilarity} 
+                        onChange={(e) => setVoiceSimilarity(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-slate-400 font-bold uppercase tracking-wider block mb-1 flex justify-between">
+                        <span>Voice Speed</span>
+                        <span className="text-indigo-400">{voiceSpeed}%</span>
+                      </label>
+                      <input 
+                        type="range" 
+                        min="50" 
+                        max="150" 
+                        value={voiceSpeed} 
+                        onChange={(e) => setVoiceSpeed(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* KNOWLEDGE TAB */}
+            {activeTab === 'knowledge' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex gap-4">
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Return Policy, Company FAQ" 
+                    value={newKbName}
+                    onChange={(e) => setNewKbName(e.target.value)}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-white outline-none focus:border-indigo-500 text-sm"
+                  />
+                  <button 
+                    onClick={handleCreateBase}
+                    className="px-6 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-500 transition-all flex items-center gap-2 text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Base
+                  </button>
+                </div>
+
+                <div className="grid gap-4 max-h-[300px] overflow-y-auto pr-2 scrollbar-hide">
+                  {kbLoading ? (
+                    <div className="py-12 flex justify-center">
+                      <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                    </div>
+                  ) : kbBases.length > 0 ? (
+                    kbBases.map((kb) => (
+                      <div key={kb.id} className="p-5 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all group">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-4">
+                            <div className="p-2.5 bg-slate-800 rounded-xl">
+                              <FileText className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <div>
+                              <p className="text-white font-bold text-sm">{kb.name}</p>
+                              <p className="text-[11px] text-slate-500">{kb._count.chunks} Knowledge Chunks Indexed</p>
+                            </div>
+                          </div>
+                          <label className="cursor-pointer">
+                            <input 
+                              type="file" 
+                              className="hidden" 
+                              onChange={(e) => handleFileUpload(kb.id, e)}
+                              disabled={kbUploading}
+                            />
+                            <div className="flex items-center gap-2 px-4 py-2 bg-indigo-600/10 text-indigo-400 rounded-xl text-xs font-bold hover:bg-indigo-600/20 transition-all">
+                              {kbUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                              Upload Text/PDF
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-slate-500 bg-white/2 rounded-2xl border border-dashed border-white/10 text-sm">
+                      No custom knowledge bases found. Add a base to ingest documentation.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ACTIONS TAB */}
+            {activeTab === 'actions' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl text-xs text-indigo-200">
+                  ⚡ <strong>Dynamic Webhook Tools:</strong> Define custom functions the agent can trigger during phone conversation loops. The LLM will autonomously choose when to trigger these endpoints based on user queries.
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/2 p-4 border border-white/5 rounded-2xl">
+                  <input 
+                    type="text" 
+                    placeholder="Tool Name (e.g. check_order)" 
+                    value={newTool.name}
+                    onChange={(e) => setNewTool({...newTool, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')})}
+                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500 text-xs font-mono"
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Description (e.g. check Shopify status)" 
+                    value={newTool.description}
+                    onChange={(e) => setNewTool({...newTool, description: e.target.value})}
+                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500 text-xs"
+                  />
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Webhook API Endpoint URL" 
+                      value={newTool.url}
+                      onChange={(e) => setNewTool({...newTool, url: e.target.value})}
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500 text-xs"
+                    />
+                    <button 
+                      onClick={handleAddTool}
+                      className="px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-white text-xs"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {tools.length > 0 ? (
+                    tools.map((t, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all font-mono text-xs">
+                        <div className="space-y-1">
+                          <span className="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-bold">{t.name}</span>
+                          <p className="text-[10px] text-slate-400 font-sans mt-1">{t.description}</p>
+                          <p className="text-[10px] text-slate-500 font-mono break-all">{t.url}</p>
+                        </div>
+                        <button 
+                          onClick={() => handleRemoveTool(idx)}
+                          className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-slate-500 text-xs border border-dashed border-white/10 rounded-2xl">
+                      No webhook tools registered yet. Build integrations above.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* EXTRACTION TAB */}
+            {activeTab === 'extraction' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl text-xs text-indigo-200">
+                  📊 <strong>Post-Call Variables:</strong> Define structured data points the AI should automatically extract from call transcripts once a session concludes (saved to database call analytics logs).
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 bg-white/2 p-4 border border-white/5 rounded-2xl">
+                  <input 
+                    type="text" 
+                    placeholder="Variable Key (e.g. user_email)" 
+                    value={newExtraction.key}
+                    onChange={(e) => setNewExtraction({...newExtraction, key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '')})}
+                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500 text-xs font-mono"
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="Instructions (e.g. extract user's email)" 
+                    value={newExtraction.description}
+                    onChange={(e) => setNewExtraction({...newExtraction, description: e.target.value})}
+                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white outline-none focus:border-indigo-500 text-xs"
+                  />
+                  <div className="flex gap-2">
+                    <select
+                      value={newExtraction.type}
+                      onChange={(e) => setNewExtraction({...newExtraction, type: e.target.value})}
+                      className="bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white outline-none focus:border-indigo-500 text-xs"
+                    >
+                      <option value="string">String</option>
+                      <option value="number">Number</option>
+                      <option value="boolean">Boolean</option>
+                    </select>
+                    <button 
+                      onClick={handleAddExtraction}
+                      className="px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-bold text-white text-xs flex-shrink-0"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {extractions.length > 0 ? (
+                    extractions.map((e, idx) => (
+                      <div key={idx} className="flex justify-between items-center p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all font-mono text-xs">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-bold">{e.key}</span>
+                            <span className="text-[10px] text-slate-500 uppercase font-sans font-bold">({e.type})</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-sans mt-1">{e.description}</p>
+                        </div>
+                        <button 
+                          onClick={() => handleRemoveExtraction(idx)}
+                          className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-slate-500 text-xs border border-dashed border-white/10 rounded-2xl">
+                      No variable extractions defined. Define variables above to populate analytics schemas.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TELEPHONY CONNECT TAB */}
+            {activeTab === 'connect' && (
+              <div className="space-y-6 animate-fade-in max-h-[50vh] overflow-y-auto pr-2 scrollbar-hide">
+                <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl w-fit flex-wrap">
+                  {['webrtc', 'twilio', 'telnyx', 'sip', 'gsm'].map((ch) => (
+                    <button
+                      key={ch}
+                      type="button"
+                      onClick={() => setActiveConnectTab(ch)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${activeConnectTab === ch ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      {ch.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+
+                {activeConnectTab === 'webrtc' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-indigo-400" />
+                      WebRTC In-App Calling Client Script
+                    </h4>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      Embed conversational audio stream straight to your custom dashboard.
+                    </p>
+                    <pre className="p-4 bg-black/60 border border-white/10 rounded-xl font-mono text-[10px] text-indigo-300 overflow-x-auto whitespace-pre-wrap">
+{`import { ConversaRTC } from '@conversa/rtc-client';
+const call = new ConversaRTC({
+  backendUrl: 'https://conversa-backend-6bou.onrender.com',
+  agentId: '${agent.id}'
+});
+call.start();`}
+                    </pre>
+                  </div>
+                )}
+
+                {activeConnectTab === 'twilio' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold text-white">Twilio Voice URL Webhook</h4>
+                    <p className="text-slate-400 text-xs">Set as webhook POST under Incoming Call configuration in Twilio Console:</p>
+                    <div className="flex gap-2 items-center bg-black/60 border border-white/10 rounded-xl p-3">
+                      <span className="font-mono text-[10px] text-indigo-300 break-all select-all flex-1">{webhookUrl}</span>
+                      <button 
+                        onClick={() => copyToClipboard(webhookUrl)}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-all flex-shrink-0"
+                      >
+                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeConnectTab === 'telnyx' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold text-white">Telnyx TeXML Webhook Application</h4>
+                    <p className="text-slate-400 text-xs">Configure TeXML Application URL in Telnyx dashboard to point to:</p>
+                    <div className="flex gap-2 items-center bg-black/60 border border-white/10 rounded-xl p-3">
+                      <span className="font-mono text-[10px] text-indigo-300 break-all select-all flex-1">{webhookUrl}</span>
+                      <button 
+                        onClick={() => copyToClipboard(webhookUrl)}
+                        className="p-1.5 bg-white/5 hover:bg-white/10 rounded-md text-slate-400 hover:text-white transition-all flex-shrink-0"
+                      >
+                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeConnectTab === 'sip' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold text-white">Conversa Hosted SIP Proxy Credentials</h4>
+                    <div className="grid grid-cols-2 gap-3 text-[10px] font-mono text-slate-300 bg-white/2 p-4 rounded-xl">
+                      <div>
+                        <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Registrar</span>
+                        <span className="text-indigo-300">sip.conversa-ai.com</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Port</span>
+                        <span className="text-indigo-300">5060 (UDP)</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Username</span>
+                        <span className="text-indigo-300">conversa_usr_{agent.id.slice(0, 8)}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block text-[9px] uppercase font-sans mb-0.5">SIP Password</span>
+                        <span className="text-indigo-300">conversa_pass_{agent.id.slice(0, 8)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeConnectTab === 'gsm' && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold text-white">Local GSM Android Gateway Setup</h4>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      Download Linphone or Sim2Sip onto your Android phone. Register to `sip.conversa-ai.com` with username `conversa_usr_{agent.id.slice(0, 8)}`. Enable call forwarding from your SIM.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <label className="lg:col-span-2 space-y-2">
-              <span className="text-sm font-bold text-slate-400">System instructions / prompt</span>
-              <textarea
-                value={developerInstructions}
-                onChange={(e) => setDeveloperInstructions(e.target.value)}
-                rows={16}
-                className="w-full resize-none font-mono text-sm bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
-              />
-            </label>
-            <div className="space-y-5">
-              <label className="space-y-2 block">
-                <span className="text-sm font-bold text-slate-400">Developer JSON notes</span>
-                <textarea
-                  value={developerNotes}
-                  onChange={(e) => setDeveloperNotes(e.target.value)}
-                  rows={10}
-                  className="w-full resize-none font-mono text-sm bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
-                />
-              </label>
-              <div className="p-4 rounded-2xl bg-indigo-600/10 border border-indigo-500/20">
-                <h4 className="text-white font-bold mb-2">Developer examples</h4>
-                <ul className="space-y-2 text-sm text-slate-300">
-                  <li>Return JSON for CRM handoff summaries.</li>
-                  <li>Call a webhook when intent is appointment booking.</li>
-                  <li>Escalate if confidence is low or sentiment is negative.</li>
-                  <li>Write exact test cases before live phone routing.</li>
-                </ul>
+
+          {/* RIGHT COLUMN: Studio Dashboard Preview Diagram */}
+          <div className="space-y-6">
+            <div className="bg-slate-900 border border-white/5 rounded-3xl p-6 space-y-6 sticky top-0">
+              <h4 className="text-sm font-bold text-white border-b border-white/5 pb-3">Agent Call Flow Diagram</h4>
+              
+              <div className="space-y-4 font-mono text-[10px] text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center font-bold font-sans">1</span>
+                  <div>
+                    <span className="text-white block font-bold">Caller Inbound Dial</span>
+                    <span className="text-slate-500 text-[9px]">Telephony routes to Conversa proxy</span>
+                  </div>
+                </div>
+
+                <div className="h-6 w-0.5 bg-slate-800 ml-2.5" />
+
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold font-sans">2</span>
+                  <div>
+                    <span className="text-white block font-bold">Greeting Stream ({speakFirst ? 'Active' : 'Muted'})</span>
+                    <span className="text-indigo-400 text-[9px] truncate block max-w-[200px]">"{greeting}"</span>
+                  </div>
+                </div>
+
+                <div className="h-6 w-0.5 bg-slate-800 ml-2.5" />
+
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-violet-600/20 text-violet-400 flex items-center justify-center font-bold font-sans">3</span>
+                  <div>
+                    <span className="text-white block font-bold">Speech processing (STT & TTS)</span>
+                    <span className="text-slate-500 text-[9px]">Voice ID: {voiceId}</span>
+                  </div>
+                </div>
+
+                <div className="h-6 w-0.5 bg-slate-800 ml-2.5" />
+
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-amber-600/20 text-amber-400 flex items-center justify-center font-bold font-sans">4</span>
+                  <div>
+                    <span className="text-white block font-bold">Cognitive LLM Engine</span>
+                    <span className="text-amber-400 text-[9px]">{model.toUpperCase()} @ temp: {temperature}</span>
+                  </div>
+                </div>
+
+                {tools.length > 0 && (
+                  <>
+                    <div className="h-6 w-0.5 bg-slate-800 ml-2.5" />
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-cyan-600/20 text-cyan-400 flex items-center justify-center font-bold font-sans">5</span>
+                      <div>
+                        <span className="text-white block font-bold">Active Functions ({tools.length} Tools)</span>
+                        <div className="flex gap-1 flex-wrap mt-1">
+                          {tools.map(t => (
+                            <span key={t.name} className="bg-cyan-500/10 text-cyan-300 px-1 py-0.2 rounded text-[8px]">{t.name}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {extractions.length > 0 && (
+                  <>
+                    <div className="h-6 w-0.5 bg-slate-800 ml-2.5" />
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-pink-600/20 text-pink-400 flex items-center justify-center font-bold font-sans">6</span>
+                      <div>
+                        <span className="text-white block font-bold">Post-Call Extractions</span>
+                        <div className="flex gap-1 flex-wrap mt-1">
+                          {extractions.map(e => (
+                            <span key={e.key} className="bg-pink-500/10 text-pink-300 px-1 py-0.2 rounded text-[8px]">{e.key}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
-        )}
 
-        <div className="mt-8 flex flex-col md:flex-row md:items-center gap-4 justify-between border-t border-white/5 pt-6">
-          <p className="text-sm text-slate-500">
-            These rules are saved into the agent instructions and used during every test conversation.
+        </div>
+
+        {/* Footer actions */}
+        <div className="p-6 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10 bg-slate-900/40 flex-shrink-0">
+          <p className="text-xs text-slate-500">
+            Clicking save uploads settings to the Conversa API server and deploys changes to live voice nodes instantly.
           </p>
-          <div className="flex items-center gap-3">
-            {saved && <span className="flex items-center gap-2 text-sm text-emerald-400"><CheckCircle2 className="w-4 h-4" /> Saved</span>}
+          <div className="flex items-center gap-4">
+            {saved && (
+              <span className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold animate-pulse">
+                <Check className="w-4 h-4" /> Config Saved
+              </span>
+            )}
             <button
-              onClick={saveRules}
+              onClick={saveSettings}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-500 transition-all disabled:opacity-60"
+              className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-500 transition-all disabled:opacity-60"
             >
-              {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Save Rules
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save Studio Config
             </button>
           </div>
         </div>
+
       </div>
     </div>
   );
 };
-
-const RuleField = ({ label, value, onChange, large }: { label: string, value: string, onChange: (value: string) => void, large?: boolean }) => (
-  <label className={large ? 'md:col-span-2 space-y-2' : 'space-y-2'}>
-    <span className="text-sm font-bold text-slate-400">{label}</span>
-    <textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      rows={large ? 3 : 2}
-      className="w-full resize-none bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-indigo-500"
-    />
-  </label>
-);
 
 const ConnectModal = ({ agent, onClose, defaultTab = 'webrtc' }: { agent: any, onClose: () => void, defaultTab?: string }) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
@@ -921,7 +1534,7 @@ export default function AgentsPage() {
       )}
 
       {selectedAgentRules && (
-        <BusinessRulesModal
+        <AgentStudioModal
           agent={selectedAgentRules}
           onClose={() => setSelectedAgentRules(null)}
           onSaved={loadAgents}
@@ -980,8 +1593,8 @@ export default function AgentsPage() {
                     onClick={() => setSelectedAgentRules(agent)}
                     className="p-2.5 bg-indigo-600/15 border border-indigo-500/20 text-indigo-200 rounded-xl text-xs font-bold hover:bg-indigo-600/25 transition-all flex-1 flex items-center justify-center gap-1.5"
                   >
-                    <ClipboardList className="w-3.5 h-3.5" />
-                    Rules
+                    <Settings2 className="w-3.5 h-3.5" />
+                    Studio
                   </button>
                   <button
                     onClick={() => setSelectedAgentConnect(agent)}

@@ -28,21 +28,23 @@ let AiService = class AiService {
             { role: 'system', content: system },
             ...params.messages.map(m => ({ role: m.role, content: m.content })),
         ];
-        const response = await this.callProvider(providerKey, inputMessages);
+        const response = await this.callProvider(providerKey, inputMessages, params.modelName, params.temperature);
         await this.aiProviders.markUsed(providerKey.id);
         return response || this.localSupportReply(params.messages.at(-1)?.content || '', params.knowledgeContext);
     }
-    async callProvider(providerKey, messages) {
+    async callProvider(providerKey, messages, modelOverride, tempOverride) {
         if (providerKey.provider === 'gemini') {
-            return this.callGemini(providerKey, messages);
+            return this.callGemini(providerKey, messages, modelOverride, tempOverride);
         }
         if (providerKey.provider === 'anthropic') {
-            return this.callAnthropic(providerKey, messages);
+            return this.callAnthropic(providerKey, messages, modelOverride, tempOverride);
         }
-        return this.callOpenAiCompatible(providerKey, messages);
+        return this.callOpenAiCompatible(providerKey, messages, modelOverride, tempOverride);
     }
-    async callOpenAiCompatible(providerKey, messages) {
+    async callOpenAiCompatible(providerKey, messages, modelOverride, tempOverride) {
         const baseUrl = providerKey.baseUrl || ai_provider_constants_1.OPENAI_COMPATIBLE_BASE_URLS[providerKey.provider];
+        const model = modelOverride || providerKey.modelName || 'gpt-4o-mini';
+        const temperature = tempOverride !== undefined && tempOverride !== null ? tempOverride : 0.4;
         const response = await fetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
@@ -50,9 +52,9 @@ let AiService = class AiService {
                 Authorization: `Bearer ${providerKey.apiKey}`,
             },
             body: JSON.stringify({
-                model: providerKey.modelName,
+                model,
                 messages,
-                temperature: 0.4,
+                temperature,
             }),
         });
         if (!response.ok) {
@@ -61,7 +63,7 @@ let AiService = class AiService {
         const data = await response.json();
         return data.choices?.[0]?.message?.content?.trim() || '';
     }
-    async callGemini(providerKey, messages) {
+    async callGemini(providerKey, messages, modelOverride, tempOverride) {
         const system = messages.find(message => message.role === 'system')?.content;
         const contents = messages
             .filter(message => message.role !== 'system')
@@ -69,14 +71,15 @@ let AiService = class AiService {
             role: message.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: message.content }],
         }));
-        const model = providerKey.modelName || 'gemini-1.5-flash';
+        const model = modelOverride || providerKey.modelName || 'gemini-1.5-flash';
+        const temperature = tempOverride !== undefined && tempOverride !== null ? tempOverride : 0.4;
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${providerKey.apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
                 contents,
-                generationConfig: { temperature: 0.4 },
+                generationConfig: { temperature },
             }),
         });
         if (!response.ok) {
@@ -85,11 +88,13 @@ let AiService = class AiService {
         const data = await response.json();
         return data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('').trim() || '';
     }
-    async callAnthropic(providerKey, messages) {
+    async callAnthropic(providerKey, messages, modelOverride, tempOverride) {
         const system = messages.find(message => message.role === 'system')?.content;
         const anthropicMessages = messages
             .filter(message => message.role !== 'system')
             .map(message => ({ role: message.role, content: message.content }));
+        const model = modelOverride || providerKey.modelName || 'claude-3-5-haiku-latest';
+        const temperature = tempOverride !== undefined && tempOverride !== null ? tempOverride : 0.4;
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -98,9 +103,9 @@ let AiService = class AiService {
                 'anthropic-version': '2023-06-01',
             },
             body: JSON.stringify({
-                model: providerKey.modelName || 'claude-3-5-haiku-latest',
+                model,
                 max_tokens: 800,
-                temperature: 0.4,
+                temperature,
                 ...(system ? { system } : {}),
                 messages: anthropicMessages,
             }),
