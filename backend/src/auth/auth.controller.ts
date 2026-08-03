@@ -25,8 +25,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
     const result = await this.authService.googleLogin(req);
-    // Redirect to frontend with token
-    const frontendUrl = process.env.FRONTEND_URL || 'https://conversa-ai-dashboard-live.vercel.app';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://conversa-ai-client.vercel.app';
     res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
   }
 }
